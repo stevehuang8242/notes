@@ -73,6 +73,8 @@ section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
 .label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.28em;color:var(--ink3);display:flex;align-items:center;gap:16px;margin-bottom:46px}
 .label .ln{height:1px;width:46px;background:var(--line)}
 .label .count{margin-left:auto;color:var(--ink2);font-weight:500}
+.list-head{display:flex;justify-content:flex-end;margin:6px 0 14px}
+.list-head .count{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3)}
 
 /* INDEX LIST — 本頁的 signature */
 .idx{border-top:1px solid var(--line)}
@@ -157,13 +159,13 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 
 <!-- ============ INDEX ============ -->
 <section id="index"><div class="wrap">
-  <div class="label rev"><span class="ln"></span>The Index<span class="count num" id="count"></span></div>
   <div class="search rev">
     <div class="search-box">
       <input id="q" type="search" placeholder="搜尋標題、摘要、人物，或文章內文…" autocomplete="off" spellcheck="false" aria-label="搜尋筆記">
     </div>
     <div class="search-status" id="status"></div>
   </div>
+  <div class="list-head rev"><span class="count num" id="count"></span></div>
   <div class="idx" id="list"></div>
 </div></section>
 
