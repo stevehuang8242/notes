@@ -70,6 +70,19 @@ section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
   .ep-ar{display:none}
 }
 
+/* SEARCH */
+.search{margin-bottom:26px}
+.search-box{position:relative;display:flex;align-items:center}
+.search-box::before{content:"";position:absolute;left:17px;width:15px;height:15px;border:1.6px solid var(--ink3);border-radius:50%;pointer-events:none}
+.search-box::after{content:"";position:absolute;left:28px;top:calc(50% + 5px);width:7px;height:1.6px;background:var(--ink3);transform:rotate(45deg);pointer-events:none}
+.search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:4px;color:var(--ink);font-family:var(--sf);font-size:16px;font-weight:300;letter-spacing:.01em;padding:15px 18px 15px 44px;outline:none;transition:border-color .2s,background .2s}
+.search input::placeholder{color:var(--ink3)}
+.search input:focus{border-color:var(--accent);background:var(--panel2)}
+.search-status{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--ink3);margin-top:12px;min-height:15px}
+mark{background:rgba(157,183,216,.28);color:var(--ink);border-radius:2px;padding:0 1px}
+.ep-snip{font-size:13.5px;font-weight:300;line-height:1.65;color:var(--ink3);margin-top:13px;max-width:680px;border-left:2px solid var(--line);padding-left:13px}
+.empty{padding:46px 6px;color:var(--ink3);font-size:15px;font-weight:300;letter-spacing:.01em}
+
 /* ABOUT */
 .about p{font-size:18px;font-weight:300;line-height:1.75;color:var(--ink2);max-width:720px}
 .about p strong{color:var(--ink);font-weight:500}
@@ -115,6 +128,12 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ INDEX ============ -->
 <section id="index"><div class="wrap">
   <div class="label rev"><span class="ln"></span>The Index<span class="count num" id="count"></span></div>
+  <div class="search rev">
+    <div class="search-box">
+      <input id="q" type="search" placeholder="搜尋標題、摘要、人物，或文章內文…" autocomplete="off" spellcheck="false" aria-label="搜尋筆記">
+    </div>
+    <div class="search-status" id="status"></div>
+  </div>
   <div class="idx" id="list"></div>
 </div></section>
 
@@ -159,33 +178,142 @@ const episodes = [
   }
 ];
 
-/* render */
-const list = document.getElementById('list');
-const total = episodes.length;
-document.getElementById('count').textContent = String(total).padStart(2,'0') + ' 篇';
-list.innerHTML = episodes.map((e,i) => {
-  const no = String(total - i).padStart(2,'0');
-  const date = e.date ? `<span class="ep-date num">${e.date}</span>` : '';
+/* ───────────── elements ───────────── */
+const listEl   = document.getElementById('list');
+const countEl  = document.getElementById('count');
+const statusEl = document.getElementById('status');
+const qEl      = document.getElementById('q');
+const total    = episodes.length;
+const allDocs  = episodes.map((e, idx) => ({ e, idx }));
+
+/* ───────────── helpers ───────────── */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function makeRe(terms){
+  const safe = terms.filter(Boolean).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return safe.length ? new RegExp('(' + safe.join('|') + ')', 'gi') : null;
+}
+
+// HTML-escape `text`, wrapping any term match in <mark>. Safe against entity corruption.
+function highlight(text, re){
+  if(!re) return esc(text);
+  re.lastIndex = 0;
+  let out = '', last = 0, m;
+  while((m = re.exec(text))){
+    out += esc(text.slice(last, m.index)) + '<mark>' + esc(m[0]) + '</mark>';
+    last = m.index + m[0].length;
+    if(m.index === re.lastIndex) re.lastIndex++;
+  }
+  return out + esc(text.slice(last));
+}
+
+/* ───────────── render ───────────── */
+function card(e, idx, re, snip){
+  const no   = String(total - idx).padStart(2, '0');
+  const date = e.date ? `<span class="ep-date num">${esc(e.date)}</span>` : '';
+  const snp  = snip ? `<p class="ep-snip">…${snip}…</p>` : '';
   return `<a class="ep rev" href="${e.file}">
     <div class="ep-no">${no}</div>
     <div class="ep-main">
-      <div class="ep-meta"><span class="ep-src">${e.src}</span>${date}</div>
-      <h3 class="ep-title">${e.title}</h3>
-      <p class="ep-dek">${e.dek}</p>
-      <div class="ep-people">${e.people}</div>
+      <div class="ep-meta"><span class="ep-src">${highlight(e.src, re)}</span>${date}</div>
+      <h3 class="ep-title">${highlight(e.title, re)}</h3>
+      <p class="ep-dek">${highlight(e.dek, re)}</p>
+      ${snp}
+      <div class="ep-people">${highlight(e.people, re)}</div>
     </div>
     <div class="ep-ar">↗</div>
   </a>`;
-}).join('');
+}
+
+function render(docs, re, instant){
+  listEl.innerHTML = docs.map(d => card(d.e, d.idx, re, d.snip)).join('');
+  if(instant) listEl.querySelectorAll('.ep').forEach(c => c.classList.add('in'));
+}
+
+/* ───────────── full-text index (lazy) ───────────── */
+let fullText = null, loadingPromise = null;
+async function loadFullText(){
+  if(fullText) return fullText;
+  if(loadingPromise) return loadingPromise;
+  statusEl.textContent = '正在載入內文索引…';
+  loadingPromise = Promise.all(episodes.map(async e => {
+    try{
+      const html = await (await fetch(e.file)).text();
+      const doc  = new DOMParser().parseFromString(html, 'text/html');
+      doc.querySelectorAll('script,style').forEach(n => n.remove());
+      const text = (doc.body ? doc.body.textContent : '').replace(/\s+/g, ' ').trim();
+      return [e.file, text];
+    }catch(_){ return [e.file, '']; }
+  })).then(pairs => {
+    fullText = Object.fromEntries(pairs);
+    statusEl.textContent = '';
+    return fullText;
+  });
+  return loadingPromise;
+}
+
+/* ───────────── search ───────────── */
+async function runSearch(){
+  const q = qEl.value.trim();
+  if(!q){
+    countEl.textContent = String(total).padStart(2, '0') + ' 篇';
+    statusEl.textContent = fullText ? '' : statusEl.textContent;
+    render(allDocs, null, true);
+    return;
+  }
+  const ft    = await loadFullText();
+  const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const re    = makeRe(terms);
+  const hits  = [];
+
+  episodes.forEach((e, idx) => {
+    const body  = ft[e.file] || '';
+    const metaL = [e.title, e.dek, e.people, e.src].join(' ').toLowerCase();
+    const bodyL = body.toLowerCase();
+    if(!terms.every(t => metaL.includes(t) || bodyL.includes(t))) return;
+
+    let score = 0;
+    terms.forEach(t => {
+      if(e.title.toLowerCase().includes(t)) score += 100;
+      score += (metaL.split(t).length - 1) * 6;
+      score += (bodyL.split(t).length - 1);
+    });
+
+    // snippet around the earliest body match
+    let pos = -1;
+    for(const t of terms){ const p = bodyL.indexOf(t); if(p >= 0 && (pos < 0 || p < pos)) pos = p; }
+    const snip = pos >= 0
+      ? highlight(body.slice(Math.max(0, pos - 42), Math.min(body.length, pos + 90)), re)
+      : '';
+
+    hits.push({ e, idx, score, snip });
+  });
+
+  hits.sort((a, b) => b.score - a.score);
+  countEl.textContent = String(hits.length).padStart(2, '0') + ' 筆結果';
+  if(!hits.length){
+    listEl.innerHTML = `<div class="empty">沒有符合「${esc(q)}」的筆記。</div>`;
+    return;
+  }
+  render(hits, re, true);
+}
+
+/* ───────────── wiring ───────────── */
+render(allDocs, null, false);
+countEl.textContent = String(total).padStart(2, '0') + ' 篇';
+
+qEl.addEventListener('focus', loadFullText, { once: true });
+let timer;
+qEl.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(runSearch, 120); });
 
 /* nav bg on scroll */
 const navEl = document.getElementById('nav');
-addEventListener('scroll', () => navEl.classList.toggle('scrolled', scrollY > 40), {passive:true});
+addEventListener('scroll', () => navEl.classList.toggle('scrolled', scrollY > 40), { passive: true });
 
 /* reveal */
 const io = new IntersectionObserver((es) => {
   es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-}, {threshold:.14});
+}, { threshold:.14 });
 document.querySelectorAll('.rev').forEach(el => io.observe(el));
 </script>
 </body>
