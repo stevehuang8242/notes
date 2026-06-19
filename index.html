@@ -156,35 +156,24 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 
 <script>
 /* ───────────────────────────────────────────────
-   要新增一集：在這個陣列「最上面」加一個物件就好。
-   file 對應到同資料夾的 html 檔名。
+   清單與搜尋索引由 build-index.js 自動產生，毋須手改：
+     notes.json         — 每篇的列表中繼資料（取自各篇 <head> 的 note:* meta）
+     search-index.json  — 每篇內文純文字（供全文搜尋，第一次搜尋時才載入）
+   新增一篇 = 放一個含 note:* meta 標籤的 HTML 並 push；
+   GitHub Action 會自動重建上面兩個檔。
 ─────────────────────────────────────────────── */
-const episodes = [
-  {
-    file: "bg2-spacex-ipo-fable5.html",
-    src:  "BG2 Pod",
-    date: "2026.06.12",
-    title: "當 SpaceX 偷偷蓋了一座 AWS",
-    dek:  "拆解 1.77 兆美元的 SpaceX IPO、Fable 5 模型競賽，以及那道讓人睡不著的算式：1.5 兆資本支出對上 3,000 億 AI 營收。",
-    people: "Gavin Baker · Andrew Fox · Clark Tang · Brad Gerstner"
-  },
-  {
-    file: "spacex-s1-memo-gerstner.html",
-    src:  "投資備忘錄",
-    date: "",
-    title: "SpaceX S-1 投資分析備忘錄",
-    dek:  "以 Gerstner 風格拆解 SpaceX 的 S-1：發射、Starlink、算力三大引擎，現金流與燒錢的拉鋸。",
-    people: "Gerstner 風格 · 分析備忘錄"
-  }
-];
 
 /* ───────────── elements ───────────── */
 const listEl   = document.getElementById('list');
 const countEl  = document.getElementById('count');
 const statusEl = document.getElementById('status');
 const qEl      = document.getElementById('q');
-const total    = episodes.length;
-const allDocs  = episodes.map((e, idx) => ({ e, idx }));
+
+/* ───────────── state ───────────── */
+let episodes = [];               // list metadata, loaded from notes.json
+let allDocs  = [];
+let total    = 0;
+let fullText = null, loadingPromise = null;
 
 /* ───────────── helpers ───────────── */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -230,25 +219,19 @@ function render(docs, re, instant){
   if(instant) listEl.querySelectorAll('.ep').forEach(c => c.classList.add('in'));
 }
 
-/* ───────────── full-text index (lazy) ───────────── */
-let fullText = null, loadingPromise = null;
+/* ───────────── full-text index (lazy, prebuilt) ───────────── */
 async function loadFullText(){
   if(fullText) return fullText;
   if(loadingPromise) return loadingPromise;
   statusEl.textContent = '正在載入內文索引…';
-  loadingPromise = Promise.all(episodes.map(async e => {
-    try{
-      const html = await (await fetch(e.file)).text();
-      const doc  = new DOMParser().parseFromString(html, 'text/html');
-      doc.querySelectorAll('script,style').forEach(n => n.remove());
-      const text = (doc.body ? doc.body.textContent : '').replace(/\s+/g, ' ').trim();
-      return [e.file, text];
-    }catch(_){ return [e.file, '']; }
-  })).then(pairs => {
-    fullText = Object.fromEntries(pairs);
-    statusEl.textContent = '';
-    return fullText;
-  });
+  loadingPromise = fetch('search-index.json')
+    .then(r => r.json())
+    .then(arr => {
+      fullText = Object.fromEntries(arr.map(d => [d.file, d.text || '']));
+      statusEl.textContent = '';
+      return fullText;
+    })
+    .catch(() => { statusEl.textContent = '內文索引載入失敗'; fullText = {}; return fullText; });
   return loadingPromise;
 }
 
@@ -298,23 +281,34 @@ async function runSearch(){
   render(hits, re, true);
 }
 
-/* ───────────── wiring ───────────── */
-render(allDocs, null, false);
-countEl.textContent = String(total).padStart(2, '0') + ' 篇';
-
-qEl.addEventListener('focus', loadFullText, { once: true });
-let timer;
-qEl.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(runSearch, 120); });
+/* ───────────── reveal observer ───────────── */
+const io = new IntersectionObserver((es) => {
+  es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold:.14 });
 
 /* nav bg on scroll */
 const navEl = document.getElementById('nav');
 addEventListener('scroll', () => navEl.classList.toggle('scrolled', scrollY > 40), { passive: true });
 
-/* reveal */
-const io = new IntersectionObserver((es) => {
-  es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-}, { threshold:.14 });
-document.querySelectorAll('.rev').forEach(el => io.observe(el));
+/* ───────────── init ───────────── */
+(async function init(){
+  try{
+    episodes = await fetch('notes.json').then(r => r.json());
+  }catch(_){
+    listEl.innerHTML = '<div class="empty">無法載入筆記清單。請透過 HTTP 開啟（GitHub Pages 或本機伺服器），勿用 file:// 直接開檔。</div>';
+    return;
+  }
+  total   = episodes.length;
+  allDocs = episodes.map((e, idx) => ({ e, idx }));
+
+  render(allDocs, null, false);
+  countEl.textContent = String(total).padStart(2, '0') + ' 篇';
+  document.querySelectorAll('.rev').forEach(el => io.observe(el));
+
+  qEl.addEventListener('focus', loadFullText, { once: true });
+  let timer;
+  qEl.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(runSearch, 120); });
+})();
 </script>
 </body>
 </html>
