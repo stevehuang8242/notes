@@ -4,38 +4,72 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Steve's Notes</title>
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  color-scheme:dark;
   --bg:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
   --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
   --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
   --accent:#9db7d8; /* restrained cold steel — 沿用兩篇的主色 */
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --hero-fade:rgba(0,0,0,.9);
+  --glow1:rgba(80,110,150,.26); --glow2:rgba(120,140,170,.12);
+  --mark:rgba(157,183,216,.28);
   --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+  --accent:#3f6597; /* darker steel for contrast on light */
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+  --hero-fade:rgba(247,247,245,.92);
+  --glow1:rgba(120,150,195,.20); --glow2:rgba(150,170,200,.12);
+  --mark:rgba(63,101,151,.20);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .35s ease,color .35s ease}
 .wrap{max-width:1080px;margin:0 auto;padding:0 30px}
 a{color:var(--ink);text-decoration:none}
 .num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
 
 /* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;background:rgba(0,0,0,.55);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
-nav.scrolled{border-bottom-color:var(--hair);background:rgba(0,0,0,.78)}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
 nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
 nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em}
 nav .links{display:flex;gap:30px}
 nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
 nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
 @media(max-width:760px){nav .links{display:none}}
 
 /* HERO */
 .hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:120px 0 90px;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 120%,rgba(80,110,150,.26),transparent 55%),radial-gradient(80% 60% at 50% -10%,rgba(120,140,170,.12),transparent 60%)}
-.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40%;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.9),transparent)}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 120%,var(--glow1),transparent 55%),radial-gradient(80% 60% at 50% -10%,var(--glow2),transparent 60%)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40%;pointer-events:none;background:linear-gradient(to top,var(--hero-fade),transparent)}
 .hero .inner{position:relative;z-index:1;width:100%}
 .hero .eyebrow{font-size:12.5px;font-weight:500;text-transform:uppercase;letter-spacing:.4em;color:var(--ink2);margin-bottom:30px}
 .hero h1{font-size:clamp(42px,8vw,96px);font-weight:600;line-height:1.02;letter-spacing:.01em}
@@ -79,7 +113,7 @@ section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
 .search input::placeholder{color:var(--ink3)}
 .search input:focus{border-color:var(--accent);background:var(--panel2)}
 .search-status{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--ink3);margin-top:12px;min-height:15px}
-mark{background:rgba(157,183,216,.28);color:var(--ink);border-radius:2px;padding:0 1px}
+mark{background:var(--mark);color:var(--ink);border-radius:2px;padding:0 1px}
 .ep-snip{font-size:13.5px;font-weight:300;line-height:1.65;color:var(--ink3);margin-top:13px;max-width:680px;border-left:2px solid var(--line);padding-left:13px}
 .empty{padding:46px 6px;color:var(--ink3);font-size:15px;font-weight:300;letter-spacing:.01em}
 
@@ -112,9 +146,15 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ NAV ============ -->
 <nav id="nav"><div class="wrap">
   <div class="brand">Steve's Notes</div>
-  <div class="links">
-    <a href="#index">Index</a>
-    <a href="#about">About</a>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#index">Index</a>
+      <a href="#about">About</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
   </div>
 </div></nav>
 
@@ -289,6 +329,19 @@ const io = new IntersectionObserver((es) => {
 /* nav bg on scroll */
 const navEl = document.getElementById('nav');
 addEventListener('scroll', () => navEl.classList.toggle('scrolled', scrollY > 40), { passive: true });
+
+/* theme toggle (initial theme is set by the inline <head> script to avoid FOUC) */
+const root = document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  try{ localStorage.setItem('theme', next); }catch(e){}
+});
+// follow the OS setting only while the user hasn't made an explicit choice
+matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+  try{ if(localStorage.getItem('theme')) return; }catch(_){}
+  root.setAttribute('data-theme', e.matches ? 'light' : 'dark');
+});
 
 /* ───────────── init ───────────── */
 (async function init(){
