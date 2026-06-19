@@ -26,8 +26,6 @@
   --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
   --accent:#9db7d8; /* restrained cold steel — 沿用兩篇的主色 */
   --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
-  --hero-fade:rgba(0,0,0,.9);
-  --glow1:rgba(80,110,150,.26); --glow2:rgba(120,140,170,.12);
   --mark:rgba(157,183,216,.28);
   --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
 }
@@ -38,8 +36,6 @@
   --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
   --accent:#3f6597; /* darker steel for contrast on light */
   --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
-  --hero-fade:rgba(247,247,245,.92);
-  --glow1:rgba(120,150,195,.20); --glow2:rgba(150,170,200,.12);
   --mark:rgba(63,101,151,.20);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -66,16 +62,11 @@ nav .links a:hover{color:var(--ink)}
 [data-theme="light"] .theme-toggle .icon-moon{display:block}
 @media(max-width:760px){nav .links{display:none}}
 
-/* HERO */
-.hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:120px 0 90px;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 120%,var(--glow1),transparent 55%),radial-gradient(80% 60% at 50% -10%,var(--glow2),transparent 60%)}
-.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40%;pointer-events:none;background:linear-gradient(to top,var(--hero-fade),transparent)}
-.hero .inner{position:relative;z-index:1;width:100%}
-.hero .eyebrow{font-size:12.5px;font-weight:500;text-transform:uppercase;letter-spacing:.4em;color:var(--ink2);margin-bottom:30px}
-.hero h1{font-size:clamp(42px,8vw,96px);font-weight:600;line-height:1.02;letter-spacing:.01em}
-.hero h1 .thin{font-weight:300}
-.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--accent);padding-bottom:4px;line-height:1}
-.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:660px;margin:34px 0 0;line-height:1.6}
+/* MASTHEAD — Medium-style author header */
+.masthead{padding:130px 0 54px}
+.mh-title{font-size:clamp(32px,5vw,50px);font-weight:600;line-height:1.12;letter-spacing:.01em}
+.mh-bio{font-size:clamp(15px,1.8vw,18px);font-weight:300;color:var(--ink2);max-width:600px;margin-top:18px;line-height:1.75}
+#index{padding-top:50px}
 
 /* SECTION */
 section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
@@ -138,7 +129,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
   .rev{opacity:1;transform:none;transition:none}
   .ep,.ep-ar,.ep-no,.ep-title{transition:none}
 }
-@media(max-width:760px){section{padding:80px 0}.hero{padding:100px 0 72px}}
+@media(max-width:760px){section{padding:80px 0}.masthead{padding:104px 0 40px}#index{padding-top:40px}}
 </style>
 </head>
 <body>
@@ -158,11 +149,10 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
   </div>
 </div></nav>
 
-<!-- ============ HERO ============ -->
-<header class="hero"><div class="inner wrap rev">
-  <div class="eyebrow">Podcast · 重點整理</div>
-  <h1>把一小時的對話，<br><span class="thin">讀成</span> <span class="xline">一頁</span>。</h1>
-  <p class="sub">每一集挑出真正重要的數字、論點與金句，重新編排成能一眼讀完、隨手分享的單頁筆記。</p>
+<!-- ============ MASTHEAD ============ -->
+<header class="masthead"><div class="wrap rev">
+  <h1 class="mh-title">Steve's Notes</h1>
+  <p class="mh-bio">我聽過、讀過、覺得值得留下來的內容——挑出真正重要的數字、論點與金句，濃縮成一眼讀完的單頁筆記。</p>
 </div></header>
 
 <!-- ============ INDEX ============ -->
