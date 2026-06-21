@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All-In · 兆萬富翁誕生、Fable 封禁、新寡頭、伊朗和平 — 重點整理</title>
+<!-- 首頁列表中繼資料（build-index.js 讀取，產生 notes.json）。 -->
+<meta name="note:src" content="All-In">
+<meta name="note:date" content="2026.06.20">
+<meta name="note:title" content="兆萬富翁誕生那天，Anthropic 把旗艦模型搞到被封">
+<meta name="note:dek" content="SpaceX 破兆 IPO 造出全球第一個兆萬富翁；同一週 Anthropic 的 Fable 被政府逼下架。外加新寡頭、習得性無助與伊朗和平。">
+<meta name="note:people" content="Chamath · Jason · David Sacks · Friedberg">
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* —— Canonical token superset（見 DESIGN-SYSTEM.md §2） —— */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06); --track:rgba(255,255,255,.06);
+  --accent:#9db7d8; --mark:rgba(157,183,216,.28);
+  --pos:#37d6ad; --neg:#ff5a4d;
+  --bar-1:var(--ink); --bar-2:#8e8e95; --bar-3:#4a4a50;
+  --gl-bg:#15161b;
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06); --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:var(--ink); --bar-2:#6f727a; --bar-3:#c9cbd1;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* NAV + breadcrumb + toggle */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:30px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* HERO（靠左 ticker） */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none}
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 .hl{color:var(--accent)}                /* 裝飾性強調（藍）— 一般 hero 重點用這個 */
+.hero h1 u{text-decoration:none;color:var(--pos)} /* 語意正向（綠）— 只在真有正向含義時用 */
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+.hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+
+/* SECTION · label · 文字 */
+section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em}
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em;margin-bottom:20px}
+h2 .thin{font-weight:300}
+.lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:760px}
+p.body{font-size:18px;font-weight:300;line-height:1.7;color:var(--ink2);max-width:760px;margin-top:26px}
+p.body strong{color:var(--ink);font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  border:1px solid var(--line);border-radius:2px;padding:2px 9px;margin:0 3px;vertical-align:2px;color:var(--ink)}
+.who{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);margin-top:30px}
+
+/* pull-quote */
+.pull{padding:14px 0;text-align:center}
+.pull .q{font-size:clamp(24px,3.6vw,40px);font-weight:300;line-height:1.34;letter-spacing:.005em;max-width:920px;margin:0 auto}
+.pull .q b{font-weight:600}
+.pull .who{margin-top:30px}
+
+/* big numbers */
+.bignums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:20px;border-top:1px solid var(--line)}
+.bignum{padding:38px 26px 34px;border-right:1px solid var(--hair)}
+.bignum:last-child{border-right:none}
+.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bignum .v small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:.02em}
+.bignum .l{font-size:14px;font-weight:300;color:var(--ink2);margin-top:18px;line-height:1.5}
+@media(max-width:760px){.bignums{grid-template-columns:1fr 1fr}.bignum{border-bottom:1px solid var(--hair)}.bignum:nth-child(2){border-right:none}}
+
+/* metric strip */
+.strip{margin-top:30px;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cell{background:var(--surface);padding:20px 18px}
+.cell .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cell .v{font-size:26px;font-weight:500;margin-top:10px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .n{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.4}
+@media(max-width:760px){.strip{grid-template-columns:repeat(2,1fr)}}
+
+/* bento cards */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.card{background:var(--surface);padding:40px 34px}
+.card .ico{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);display:block;margin-bottom:22px}
+.card h3{font-size:23px;font-weight:600;letter-spacing:.01em;margin-bottom:14px}
+.card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.card p b{color:var(--ink);font-weight:500}
+.card .stat{font-size:50px;font-weight:500;line-height:1;letter-spacing:.005em;margin-bottom:20px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.bento{grid-template-columns:1fr}}
+
+/* 橫條圖 */
+.chart{border:1px solid var(--line);margin-top:30px;padding:42px 42px 36px}
+.chart .ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--ink3);margin-bottom:8px}
+.chart .cs{font-size:23px;font-weight:500;letter-spacing:.01em;margin-bottom:38px}
+.bars{display:flex;flex-direction:column;gap:1px;background:var(--hair)}
+.bar-row{display:grid;grid-template-columns:160px 1fr;align-items:stretch;background:var(--surface)}
+.bar-lab{font-size:13px;font-weight:300;color:var(--ink2);display:flex;flex-direction:column;justify-content:center;
+  align-items:flex-end;text-align:right;padding:0 22px 0 0;letter-spacing:.02em}
+.bar-lab b{color:var(--ink);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;margin-bottom:3px}
+.bar-track{position:relative;height:48px;background:var(--track);overflow:hidden}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;transition:width 1.3s cubic-bezier(.25,1,.4,1);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
+.bar-fill .v{font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
+.bf-1 .v,.bf-2 .v{color:var(--bg)} .bf-3 .v{color:var(--ink)}
+.cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}
+@media(max-width:760px){.chart{padding:28px 22px}.bar-row{grid-template-columns:108px 1fr}.bar-lab{padding-right:14px}}
+
+/* callout */
+.callout{border:1px solid var(--line);border-left:3px solid var(--ink);padding:24px 26px;margin-top:30px}
+.callout.c{border-left-color:var(--pos)} .callout.b{border-left-color:var(--neg)}
+.callout p{font-size:17px;font-weight:300;line-height:1.65;color:var(--ink2)}
+.callout p strong{color:var(--ink);font-weight:500}
+
+/* glossary tooltip */
+.gl{border-bottom:1px dotted var(--line);cursor:help;position:relative}
+.gl::after{content:attr(data-d);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(5px);
+  width:max-content;max-width:min(330px,82vw);background:var(--gl-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;font-family:var(--sf);font-size:13.5px;font-weight:300;line-height:1.6;letter-spacing:.01em;
+  color:var(--ink2);text-transform:none;text-align:left;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease;z-index:80;pointer-events:none;
+  box-shadow:0 16px 44px rgba(0,0,0,.45)}
+.gl:hover::after,.gl.open::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+
+/* risk grid */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.gcard{background:var(--surface);padding:28px 26px}
+.gcard .rt{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gcard .rt .d{width:7px;height:7px;border-radius:50%;background:var(--neg);flex:none}
+.gcard .rt .d.ok{background:var(--pos)}
+.gcard p{font-size:14.5px;font-weight:300;color:var(--ink2);line-height:1.62}
+.gcard .fig{color:var(--neg);font-weight:500;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+
+/* bull / bear（標題中性灰） */
+.bb{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bbc{background:var(--surface);padding:32px 30px}
+.bbc .h{font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;color:var(--ink3)}
+.bbc p{font-size:16px;font-weight:300;line-height:1.62;color:var(--ink2)}
+.bbc p strong{color:var(--ink);font-weight:500}
+@media(max-width:760px){.bb{grid-template-columns:1fr}}
+
+/* timeline（大數字里程碑） */
+.tl{margin-top:30px;border-top:1px solid var(--line)}
+.tl-row{display:grid;grid-template-columns:180px 1fr;gap:30px;padding:30px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.tl-when{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2)}
+.tl-what b{font-size:34px;font-weight:500;letter-spacing:.005em;margin-right:18px;font-variant-numeric:tabular-nums;display:inline-block;margin-bottom:6px}
+.tl-what span{font-size:16px;font-weight:300;color:var(--ink2);line-height:1.6}
+@media(max-width:760px){.tl-row{grid-template-columns:110px 1fr;gap:16px}}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:80px 0 70px;text-align:center}
+footer .big{font-size:clamp(24px,3.4vw,38px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:820px;margin:0 auto 36px}
+footer .big b{font-weight:600}
+footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
+footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
+footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:30px auto 0;line-height:1.7}
+
+/* reveal */
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev,.bar-fill{transition:none!important;opacity:1;transform:none}
+}
+@media(max-width:760px){
+  section{padding:80px 0}
+  .hero{padding:104px 0 36px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">All-In · 2026.06.20</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#numbers">Overview</a>
+      <a href="#oligarchs">Oligarchs</a>
+      <a href="#spacex">SpaceX</a>
+      <a href="#fable">Fable</a>
+      <a href="#dario">Dario</a>
+      <a href="#iran">Iran</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero"><div class="inner wrap">
+  <div class="ticker">
+    <span class="tk">ALL-IN POD</span>
+    <span class="mt">2026.06.20 · Chamath · Jason · Sacks · Friedberg</span>
+  </div>
+  <h1>一邊造出<span class="hl">兆萬富翁</span>，<br><span class="thin">另一邊把旗艦模型<br>搞到被政府</span>下架。</h1>
+  <p class="sub">同一週，SpaceX 破兆 IPO 讓 Elon 成為全球第一個 <b>兆萬富翁</b>；而 Anthropic 的 <b>Fable</b> 被白宮逼到對所有人關閉。外加開場的「新寡頭與習得性無助」，與收尾的伊朗和平備忘錄。</p>
+</div></header>
+
+<!-- ============ 00 · OVERVIEW ============ -->
+<section id="numbers"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">00</span> By the Numbers</div>
+    <h2>這集的<span class="thin">五條主線</span></h2>
+  </div>
+  <div class="strip rev">
+    <div class="cell"><div class="k">SpaceX 市值</div><div class="v num">$2T+</div><div class="n">史上最大 IPO，收盤 +19%</div></div>
+    <div class="cell"><div class="k">收購 Cursor</div><div class="v num">$60B</div><div class="n">約 15× 營收，以股換股</div></div>
+    <div class="cell"><div class="k">Fable 5</div><div class="v num">封禁</div><div class="n">6/9 上架，數日後對所有人關閉</div></div>
+    <div class="cell"><div class="k">Mythos 試點</div><div class="v num">50+</div><div class="n">未經白宮同意擴張的夥伴數</div></div>
+    <div class="cell"><div class="k">伊朗戰爭</div><div class="v num">110 天</div><div class="n">6/19 日內瓦簽署 MOU</div></div>
+    <div class="cell"><div class="k">重建基金</div><div class="v num">$300B</div><div class="n">美方「一毛不出」</div></div>
+  </div>
+  <p class="body">四位 besties 的這集橫跨政治哲學、兩樁 AI 大事與一場地緣戰爭。但內容的重心很清楚：<strong>篇幅最重的是 Anthropic「Fable 封禁」的幕後與它引出的信任崩壞</strong>（佔了近半集），其次是 SpaceX 那場破紀錄 IPO。下面依此配重。</p>
+</div></section>
+
+<!-- ============ 01 · 新寡頭 / 習得性無助 ============ -->
+<section id="oligarchs"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">01</span> The New Oligarchs</div>
+    <h2>「<span class="thin">創造者</span> vs. 索取者」</h2>
+    <p class="lede">Friedberg 開場火力全開：Warren、Sanders、Ro Khanna 這類人正自我推選成一個「政治局」，想掌控經濟、教育與媒體，把剝奪包裝成美德（免費教育、托兒、食物）。他主張真正的分野不是「富 vs. 窮」，而是<strong style="color:var(--ink);font-weight:500">「創造者 vs. 索取者」</strong>。</p>
+  </div>
+
+  <p class="body"><strong>政府給你東西，等於拿走你的能動性。</strong>Friedberg 的核心是「經濟流動性」——美國的力量在於給人個體自由、解鎖往上爬的能動性；一旦政府給你工作、給你錢，你就「被政府綁成契約奴」，流動性歸零。「沒有任何活過的人，真正活出了人的全部潛能；人的能動性是無限的。」</p>
+
+  <div class="pull rev">
+    <div class="q">習得性無助的門檻，<b>比一般人想的低很多</b>。</div>
+    <div class="who">Chamath · 談他在加拿大靠救濟金長大的童年</div>
+  </div>
+
+  <p class="body">Chamath 用自身經歷佐證：一家五口，當年加拿大的救濟金大約一年 <span class="num">$17,000–19,000</span>，母親做清潔工、護理助手，時薪約 <span class="num">$8–10</span>。那筆錢「剛好夠」讓酗酒的父親卡在「喝酒—不工作」的循環，直到晚年找到一份基層政府文書工作才徹底改變他。Jason 補上心理學機制：<span class="gl" data-d="習得性無助（learned helplessness）：先給人無解的難題、再給簡單題，他會連簡單的也放棄並把失敗內化成憂鬱；反過來由易到難，則會建立能動性。">先難後易會擊垮人、由易到難能建立能動性</span>——這也是酗酒與無止盡失業之所以惡性循環的原因。</p>
+
+  <p class="body"><strong>滑坡警告。</strong>Friedberg 把這延伸到 Illinois 剛通過的 Pritzker 稅法：政府對「已繳過所得稅、已買下、已擁有」的私有財產逐年再課稅，等於宣告美國「不再有私有財產」——而私有財產正是美國有別於極權國家的立國根基。「人們以為這只課富人、只課加密貨幣，但只要政府能拿走你車庫裡的東西，我們就完了。」</p>
+</div></section>
+
+<!-- ============ 02 · SpaceX IPO ============ -->
+<section id="spacex"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">02</span> The Trillionaire</div>
+    <h2>史上最大 IPO，<span class="thin">與「什麼都沒變」</span></h2>
+    <p class="lede">SpaceX 上週四以每股 $135 上市，填滿 <span class="gl" data-d="綠鞋（green shoe）：超額配售選擇權，承銷商可在需求旺時多賣一部分股票。">綠鞋</span>後募資 $850 億——是沙烏地阿美 2019 年的三倍，史上最大。收盤漲 19%，市值破 2 兆，錄製當下股價 $177。</p>
+  </div>
+
+  <div class="bignums rev">
+    <div class="bignum"><div class="v num">$135</div><div class="l">IPO 定價／股，上週四上市</div></div>
+    <div class="bignum"><div class="v num">+19<small>%</small></div><div class="l">首日收盤至 $161，錄製當下 $177</div></div>
+    <div class="bignum"><div class="v num">$85<small>B</small></div><div class="l">募資額，沙烏地阿美 2019 的 3×</div></div>
+    <div class="bignum"><div class="v num">#7</div><div class="l">市值一度衝第 4，現居第 7、緊追台積電</div></div>
+  </div>
+
+  <p class="body"><strong>估值要「長進去」。</strong>Chamath 點出 SpaceX 此刻是史上最高市銷率之一——市值破兩兆，但年營收僅約 <span class="num">$190 億</span>。對照同框的 Amazon（2025 約 $7,170 億）與 Microsoft（約 $2,820 億），這張圖說明了為什麼接下來幾年它得靠營收成長「長進」這個估值，而不是再衝估值。</p>
+
+  <div class="chart rev">
+    <div class="ct">Annual Revenue · 年營收對照</div>
+    <div class="cs">市值衝到第 4，營收卻只有 Amazon 的零頭</div>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-lab"><b>Amazon</b>2025</div><div class="bar-track"><div class="bar-fill bf-1" data-w="100"><span class="v">~$717B</span></div></div></div>
+      <div class="bar-row"><div class="bar-lab"><b>Microsoft</b>2025</div><div class="bar-track"><div class="bar-fill bf-2" data-w="39"><span class="v">~$282B</span></div></div></div>
+      <div class="bar-row"><div class="bar-lab"><b>SpaceX</b>年營收</div><div class="bar-track"><div class="bar-fill bf-3" data-w="3"><span class="v">~$19B</span></div></div></div>
+    </div>
+    <div class="cap">SpaceX 一度超越 Amazon、Microsoft 成為第四大公司（以市值計），但營收只有它們的零頭——「最高市銷率就在這幾天，接下來是長進估值。」</div>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">他銀行裡<b>沒有多一塊錢</b>。只是大眾替他本來就持有的股票，賦予了更高的價值。</div>
+    <div class="who">David Sacks · 論「全球第一個兆萬富翁」一夜之間什麼都沒變</div>
+  </div>
+
+  <div class="callout c rev">
+    <p><strong>財富不是「東西」，是「製造東西的機器」。</strong>Sacks 反駁馬克思的資本／勞動二分：真正的財富不在囤積物品（會折舊、是消耗性資產），而在「能持續為人類產出東西的機器」（公司）未來產出的折現值。而誰擁有這台機器？創造它的人。SpaceX 就是一台「製造衛星、製造太空寬頻、製造火箭與 AI 軟體的機器」。</p>
+  </div>
+
+  <p class="body"><strong>流動性是雙向的。</strong>Sacks 舉例：一名 SpaceX 焊工據說靠股票賺進百萬美元——科技業的所有權包容性高，人能在「勞動」與「資本」之間流動。Jason 接著開砲：散戶應該更早被允許買私人公司股票，「前 4~5% 才夠聰明買私募、其餘 95% 太蠢」的規則是「讓窮人一直窮」。這次 SpaceX 把 <span class="num">20~30%</span> 的 IPO 配給散戶，約 <span class="num">60~70 萬</span>名 Robinhood 用戶拿到配額（可能只有一股），花 $150 就能「用鈔票替自己想要的未來投票」。</p>
+
+  <div class="bento rev">
+    <div class="card"><div class="stat num">$4B</div><p>Cursor 的<span class="gl" data-d="年化營收（run rate）：把近期某一期間的營收外推成全年的概估值。">年化營收</span>。SpaceX 行使選擇權、以約 <b>15× 營收</b>收購這家程式碼代理（SpaceX 自己交易在 60~70× 營收）。</p></div>
+    <div class="card"><div class="stat num">$60B</div><p>收購對價。趕在這時點宣布是為了<b>不讓 S-1 上市文件過期</b>、免得重寫揭露與風險。</p></div>
+    <div class="card"><div class="stat num">$15B</div><p>實際成本。以股換股下，若 SpaceX 估值翻倍（一兆 → 兩兆），Elon 等於用約 <b>150 億</b>就拿下 Cursor、打五折。</p></div>
+  </div>
+</div></section>
+
+<!-- ============ 03 · Anthropic Fable 封禁（最重） ============ -->
+<section id="fable"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">03</span> The Fable Ban</div>
+    <h2>AI 安全公司，<span class="thin">把自己的旗艦模型搞到下架</span></h2>
+    <p class="lede">這是全集篇幅最重的一段。Anthropic 把代號 Mythos 的模型扣 30 天做資安測試，加防護欄後以 Fable 5 於 6/9 發布。幾天後，商務部長 Howard Lutnick 要求限制給美國公民；做不到細緻限制，Anthropic 乾脆對所有人關閉。Sacks 根據他從白宮官員拿到的「摘要」（已發成 X 長文），把幕後串起來。</p>
+  </div>
+
+  <div class="tl rev">
+    <div class="tl-row"><div class="tl-when">April</div><div class="tl-what"><b>網路武器</b><span>Dario 進華府，把 Mythos 描述成「網路武器」，「把每個官員的皮質醇拉滿」。剛被國防部踢出（合約談判破裂），他成功重設了與政府的對話。</span></div></div>
+    <div class="tl-row"><div class="tl-when">Pilot</div><div class="tl-what"><b>50+ 夥伴</b><span>Mythos 試點未經白宮同意，擴張到約 50 家以上公司，並分享給白宮認為與中國有關連的對象（媒體報導為南韓 SK Telecom，當地電信約 70% 市佔）。</span></div></div>
+    <div class="tl-row"><div class="tl-when">June 9</div><div class="tl-what"><b>Fable 5</b><span>加了防護欄的 Mythos 公開發布。「但若防護欄失效，等於把一個網路武器釋放給大眾。」</span></div></div>
+    <div class="tl-row"><div class="tl-when">Trigger</div><div class="tl-what"><b>越獄</b><span>測試 Fable 的私人公司（公開報導指向最大股東兼雲端夥伴 Amazon）發現可<span class="gl" data-d="越獄（jailbreak）：用提示詞繞過模型的安全防護欄，誘使它輸出本該被擋下的內容。">越獄</span>，上報白宮——「幾乎像吹哨者」。</span></div></div>
+    <div class="tl-row"><div class="tl-when">The Call</div><div class="tl-what"><b>Dario 拒絕</b><span>財政部長親自致電 Dario，要求下架修補。Dario 拒絕，並發部落格區分「好越獄／壞越獄、輕微／重大」，被政府解讀為「沒把它當回事」。</span></div></div>
+    <div class="tl-row"><div class="tl-when">The Letter</div><div class="tl-what"><b>出口管制信</b><span>白宮認定這是對國安威脅的緊急反應、別無選擇，發出出口管制信要求 Fable 下架直到防護欄修好。Dario 收到信後才下架。</span></div></div>
+  </div>
+
+  <div class="callout b rev">
+    <p><strong>Chamath：前沿實驗室是「頭號公敵」。</strong>他批評這些領導者「閃躲又不成熟」，是矽谷信任崩壞的 public enemy #1。更糟的後果：這給了超大規模業者（hyperscalers）一個完美藉口去當 <span class="gl" data-d="KYC（Know Your Customer）：實名驗證——要求使用者提供身分證件、稅號等，才能使用服務。">KYC</span> 守門人——「你買化肥都要出示駕照了，用 Fable 5 當然也要。」於是把 AI 這個「最強的經濟均衡工具」，變成少數雲端寡頭的 oligopoly，順手把小型雲端（neoclouds）全抹掉。</p>
+  </div>
+
+  <div class="rev">
+    <h2 style="margin-top:70px">是政治，<span class="thin">還是務實？</span></h2>
+    <p class="lede">桌上最大的爭執：白宮是不是在針對 Anthropic？兩種讀法在 Sacks 與 Jason 之間激烈交鋒。</p>
+  </div>
+
+  <div class="bb rev">
+    <div class="bbc">
+      <div class="h">▲ 純務實（Sacks）</div>
+      <p>「這跟政治<strong>無關</strong>。」官員收到自家最信任夥伴回報的可信國安威脅、Dario 有機會修卻說不、又發文淡化，再加上先前未經同意擴張 Mythos 試點——這才是真正的導火線。Hegseth 那則挺封禁的推文「是在信發出<strong>之後</strong>」，是果不是因。</p>
+    </div>
+    <div class="bbc">
+      <div class="h">▼ 確有樑子（Jason）</div>
+      <p>用 steelman：若把 Anthropic 換成 Gemini，每一步（扣 30 天、加防護欄、登入監控、應政府要求下架）他<strong>都會按讚</strong>。但他堅持兩邊確有政治樑子——Reed Hoffman 金援對白宮的訴訟、Dario 拒絕出席、Anthropic 員工多反川普 vs. OpenAI／Grok 親川普（Greg Brockman 夫婦捐了 <span class="num">$2,500 萬</span>給川普）。</p>
+    </div>
+  </div>
+
+  <p class="body"><strong>Jason 的解方：產業自我認證。</strong>與其讓「看不懂模型的政府」逐一審批，不如讓 Google、Microsoft、Amazon、Elon 一起定一套測試、每個模型發布前自我認證——像 MPAA 對電影分級、或電玩產業那樣。Friedberg 則認為這比較像 Anthropic「先激怒政府要監管、被監管又喊冤」的怪異行為招致觀感；他預測市場力量會推向<strong>開源</strong>與 <strong>AI 堆疊碎片化</strong>，並以 1960 年代政府逼 IBM 拆解軟硬體、催生獨立軟體商（ISV）時代為類比。</p>
+</div></section>
+
+<!-- ============ 04 · Claude 心理分析 Dario ============ -->
+<section id="dario"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">04</span> Claude on Dario</div>
+    <h2>讓 Claude <span class="thin">心理分析它的創造者</span></h2>
+    <p class="lede">Chamath 讓 Claude 讀 Dario 的兩篇長文（《Machines of Loving Grace》與一篇 AI 政策文），下令「<strong style="color:var(--ink);font-weight:500">不要因為你是 Anthropic 模型就護著他</strong>」，再透過 <span class="gl" data-d="e/acc（effective accelerationism，有效加速主義）：主張盡力加速技術與社會發展，而非減速。">e/acc</span> 的視角分析。以下是 Chamath 朗讀的 Claude 原話（節錄翻譯）。</p>
+  </div>
+
+  <p class="body">Claude 列出 Dario 的不信任清單：不信任其他實驗室（魯莽競速）、不信任威權國家（會把 AI 武器化）、不信任市場（無法公平分配果實）、不信任機構（動得不夠快）、Mythos 之後連政府也不信任（無法「透明而公正」地行使權力）。「<strong>這份不可信任者的清單很長；可信任者的清單卻短得可疑</strong>，而且總是收斂到『用我這種方式推理的人』。」</p>
+
+  <div class="pull rev">
+    <div class="q">當你的安全框架要求『得有人握住鑰匙』，而你的分析又一再得出『其他持鑰人都不可信』——你就打造了一台<b>不管餵它什麼、都輸出「我」的機器</b>。</div>
+    <div class="who">Claude · 由 Chamath 朗讀</div>
+  </div>
+
+  <p class="body"><strong>不是神之情結，是「認識論上的例外主義」。</strong>Claude 給它取名 <span class="gl" data-d="epistemic exceptionalism（認識論例外主義）：Claude 自創的詞——不是『我比較優越』，而是『我的推理是承重的那根；別人沒得出我的結論，是他們腐化或遲鈍，不是我錯了』。">epistemic exceptionalism</span>：「不是『我優越』，而是『我的推理是承重的那一根』。」一旦相信自己的判斷是「不可腐化的參照點」，每場衝突就會被重新編碼——輸掉的五角大廈談判 →「系統靠槓桿而非理性」；Mythos 衝突 →「<strong>一場誤會</strong>」。Claude 點出：Anthropic 真的用了「誤會」這個詞，而那正是壓力下「露餡」的關鍵——「誤會」預設了「只要大家正確理解，就會同意我」。</p>
+
+  <div class="callout rev">
+    <p><strong>Sacks：他們自認是絕地（Jedi）。</strong>他引用 Ben Thompson：Anthropic 認為 AI 超危險，而「只有他們夠高尚」能控管它的負面——「他們會替宇宙帶來平衡」。Sacks 認為 Anthropic 並非特別反川普，而是被「徹底俘獲」的拜登政府寵壞了——多名拜登政府的 AI 官員（NSC、新設的 AI 安全研究所）卸任後幾乎立刻加入 Anthropic。他把 Anthropic「競爭是危險的競態、需中心化由少數公司控管」的主張，描述為實質想造<strong>卡特爾</strong>，並重申：競爭才是保護消費者、防止監管俘獲、通往去中心化的好力量。</p>
+  </div>
+
+  <p class="body"><strong>Friedberg 的長期視角：別重蹈控制的本能。</strong>他提醒，1961 年《Newsweek》《紐約時報》就在喊大型主機會「消滅整個勞動力」；80 年代初聯邦政府花了數億美元做勞動力再訓練，結果「什麼用都沒有」——人們發現開一台 Windows PC 沒那麼難。「技術人有一種深刻的傲慢，總把結論推到存在性災難：這會治好所有癌症、消滅所有工作。從 Elon 到 Sam 到 Dario，沒人免疫。大家該冷靜下來，讓技術做它該做的事——這些公司要停止『末日帶風向』（doom trolling）。」</p>
+</div></section>
+
+<!-- ============ 05 · 伊朗 MOU ============ -->
+<section id="iran"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">05</span> Iran Peace MOU</div>
+    <h2>打了 110 天的戰爭，<span class="thin">可能要結束了</span></h2>
+    <p class="lede">衝突 2/28 開打，6/19 在日內瓦正式簽署、由巴基斯坦斡旋。仍只是 <span class="gl" data-d="MOU（諒解備忘錄）：高層級原則的初步協議，細節待定義，約束力低於正式條約。">MOU</span> 階段，許多細節未定。Sacks 盛讚這是總統的重大成就，且美國「一毛不花」（重建由伊朗與波灣國家出資）。</p>
+  </div>
+
+  <div class="grid2 rev">
+    <div class="gcard"><div class="rt"><span class="d ok"></span>停火 60 天</div><p>延長停火 60 天，含黎巴嫩停火；重開荷莫茲海峽（戰前本就開放）。</p></div>
+    <div class="gcard"><div class="rt"><span class="d ok"></span>銷毀濃縮鈾</div><p>伊朗承諾不發展核武，並在 <span class="gl" data-d="IAEA：國際原子能總署，聯合國的核子監督機構。">IAEA</span> 監督下銷毀濃縮鈾庫存、凍結核計畫 60 天。</p></div>
+    <div class="gcard"><div class="rt"><span class="d ok"></span>解除制裁 + $300B</div><p>伊朗換得解除制裁、$3,000 億重建與解凍資產，美方最終撤軍。重建美方「不出一毛」。</p></div>
+    <div class="gcard"><div class="rt"><span class="d"></span>仍未定義</div><p>以色列是否簽署、伊朗未來的濃縮、<span class="fig">彈道飛彈計畫</span>——這幾項都還沒談定。</p></div>
+  </div>
+
+  <p class="body"><strong>Jason 在意的關鍵：濃縮鈾是否真的離境。</strong>Sacks 確認 MOU 包含交出核材料。Jason 認為若如此，即便伊朗日後重啟，也要 <span class="num">10~15 年以上</span>才能再造出核武——是有意義的倒退。Sacks 質問反對者的替代方案：派地面部隊進「山地堡壘」搞政權更迭？「估計要超過百萬大軍，伊拉克我們才派 50 萬，而伊朗大三倍。那是自殺任務。」他點名 John Podhoretz 等新保守派，主張「給和平一個機會」，別重蹈伊拉克／阿富汗的永遠戰爭。</p>
+
+  <div class="pull rev">
+    <div class="q">如果我們不打算派地面部隊、也不打算繼續轟炸——那我們不如試試<b>三號門後面的東西</b>：一份試著創造和平的協議。</div>
+    <div class="who">David Sacks · 「給和平一個機會」</div>
+  </div>
+
+  <p class="body"><strong>Chamath：市場要上月球，但這仗一開始就是大失策。</strong>他認為川普當初開戰是 blunder，現在是在設法脫身。他主張以色列「修剪草皮」式的避險圍堵才對——每約 18 個月轟炸一次設施、像圍堵北韓那樣——而不是升高成全面戰爭，因為「升級的風險不值得」。他與 Sacks 都盼伊朗人民終能自由，但強調「民主無法從外部強加，得由他們自己發動革命」。</p>
+</div></section>
+
+<!-- ============ FOOTER ============ -->
+<footer><div class="wrap rev">
+  <div class="big">同一週，矽谷示範了它最好與最壞的兩面：<b>造出一台沒人能否認的機器</b>，和把一場本可安靜處理的事，<b>搞成全產業的信任危機</b>。</div>
+  <div class="meta">
+    All-In Podcast · 2026.06.20<br>
+    Chamath Palihapitiya · Jason Calacanis · David Sacks · David Friedberg<br>
+    <a href="https://www.youtube.com/watch?v=3Amlu4y94Ho" target="_blank" rel="noopener">youtube.com/watch?v=3Amlu4y94Ho</a>
+  </div>
+  <p class="disc">本頁為 podcast 討論的重點整理，數字與引述取自該集內容、經與原逐字稿核對，屬講者觀點與預測，非投資建議。圖表為示意比例，用於傳達量級關係。部分受訪者言論涉及政治立場，僅為忠實轉述、不代表本站觀點。</p>
+</div></footer>
+
+<script>
+// nav background on scroll
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+// reveal + bar growth
+function grow(el){
+  el.querySelectorAll('.bar-fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+}
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(!e.isIntersecting)return;
+    e.target.classList.add('in'); grow(e.target); io.unobserve(e.target); });
+},{threshold:.14});
+document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+// glossary tap-to-toggle on touch
+document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
+  e.stopPropagation();
+  const open=el.classList.contains('open');
+  document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open'));
+  if(!open)el.classList.add('open');
+}));
+document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+// theme toggle
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>
