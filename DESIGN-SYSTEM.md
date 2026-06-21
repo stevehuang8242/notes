@@ -269,8 +269,14 @@ nav .links a:hover{color:var(--ink)}
 .bar-fill{transition:width 1.2s cubic-bezier(.25,1,.4,1)}
 .bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
 .bf-1 .v,.bf-2 .v{color:var(--bg)} .bf-3 .v{color:var(--ink)}   /* 見 §2 反白規則 */
+
+/* 窄條的數值標籤：bar-track 是 overflow:hidden，極短的 bar（如佔比個位數）
+   把標籤關在 fill 內會被裁掉。給該 bar 加 .out，把標籤移到 fill 右側外。 */
+.bar-fill.out{overflow:visible;padding-right:0}
+.bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
 ```
 > 灰階 ramp 與軌道 token 化；正向資料可用 `--pos` 取代 `--bar-1`。
+> **窄條標籤**：只要 bar 寬度小到容不下數值文字，就替它加 `.out`（標籤外置），否則 `overflow:hidden` 會把數字裁掉——這是每張含「零頭級」分類的圖都會踩到的坑。
 
 ### 6.7 表格（財務）
 ```css
@@ -300,7 +306,7 @@ td.pos{color:var(--pos)} td.neg{color:var(--neg)}
 - **Bull/Bear**：格線牆兩欄（`.bbc.bull` / `.bbc.bear`）。**標題一律中性灰 `.bbc .h{color:var(--ink3)}`**，多空只靠 `▲`／`▼` 區分，語意色僅留在內文 `strong`（不染標題）。
 - **Hero**：**canonical 單一＝靠左 ticker**（`.ticker` badge + meta、細粗混排多行 h1、副標、選填 CTA），`padding:120px 0 40px`。不再用置中 hero。**`.hero` 不要設 `display:flex`**——靠 `.inner.wrap` 當一般 1080 wrap，左緣才會跟內文 section 對齊（flex column + `margin:0 auto` 會讓 inner 縮成內容寬並置中、與內文不齊，是 bug）。h1 強調三選一：`.hl`（`--accent` 藍，一般重點預設）/ `u`（`--pos` 綠，限真有正向語意）/ `.xline`（中性底線）。
 - **Timeline**：**canonical 單一＝大數字里程碑**（`.tl-row`：左 `.tl-when` 期間 + 右 `.tl-what b` 大字頭條 + `span` 說明）。敘事轉折也用這款（頭條放短句、詳述移到 span），不再用 `.tlr` 引述款。
-- **Pull-quote**：置中、`font-weight:300` 大字、`.who` 署名小 caps。
+- **Pull-quote**：置中、`font-weight:300` 大字、`.who` 署名小 caps。**垂直留白 `padding:60px 0 48px`**——引言常夾在兩段 `.body` 之間，留白太小（如 14px）會和上下文擠在一起、失去「停頓」感；上多下少（署名下方已有 section 留白）。
 - **Footer**：`border-top:1px solid var(--line)`，大字結語 + meta caps + 免責 `--ink3`。
 - **首頁清單 `.ep`** 與 **搜尋 `.search` / `mark`**：見 `index.html`，已全 token 化，照搬即可。
 
