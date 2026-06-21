@@ -33,7 +33,10 @@
   --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06); --track:rgba(255,255,255,.06);
   --accent:#9db7d8; --mark:rgba(157,183,216,.28);
   --pos:#37d6ad; --neg:#ff5a4d;
-  --bar-1:var(--ink); --bar-2:#8e8e95; --bar-3:#4a4a50;
+  /* tonal accent ramp — strongest series → full accent, weakest → dim tint */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
   --gl-bg:#15161b;
   --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
   --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
@@ -45,7 +48,9 @@
   --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06); --track:rgba(0,0,0,.06);
   --accent:#3f6597; --mark:rgba(63,101,151,.20);
   --pos:#0e8c68; --neg:#d23b2e;
-  --bar-1:var(--ink); --bar-2:#6f727a; --bar-3:#c9cbd1;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
   --gl-bg:#ffffff;
   --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
 }
@@ -162,7 +167,7 @@ p.body strong{color:var(--ink);font-weight:500}
   display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
 .bar-fill .v{font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
 .bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
-.bf-1 .v,.bf-2 .v{color:var(--bg)} .bf-3 .v{color:var(--ink)}
+.bf-1 .v{color:var(--bar-1-ink)} .bf-2 .v{color:var(--bar-2-ink)} .bf-3 .v{color:var(--bar-3-ink)}
 .bar-fill.out{overflow:visible;padding-right:0}
 .bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
 .cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}

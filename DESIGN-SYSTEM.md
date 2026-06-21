@@ -18,7 +18,7 @@
 | Nav 底色 | `var(--nav-bg)` | 寫死 `rgba(0,0,0,.55)` | 寫死 `rgba(0,0,0,.55)` | `var(--nav-bg)` |
 | 卡片底色 | — | 寫死 `#000` | 寫死 `#000` | `var(--surface)` |
 | 進度條軌 | — | `rgba(255,255,255,.04)` | `rgba(255,255,255,.08)` | `var(--track)` |
-| 圖表灰階 | — | `#8e8e95` / `#4a4a50` | `#6a6a72` | `--bar-2/3` ramp |
+| 圖表序列色 | — | `#5d769b` / `#313d4d` | `#84a0c5` / `#d3deec` | `--bar-1/2/3` accent ramp |
 | 語意色 | `--accent` | `--accent` | `--pos` / `--neg`（無淺色） | 全部補淺色變體 |
 | Section 間距 | 110px | 120px | 104px | **scale（見 §4）** |
 
@@ -29,7 +29,7 @@
 ## 1. 設計原則
 
 1. **編輯室質感，非儀表板**：黑底白字、細線分隔、寬鬆字距的小型 uppercase 標籤；資訊靠排版層級，不靠色塊。
-2. **單一冷調強調色**：`--accent`（cold steel）是唯一裝飾色；其餘一律中性灰階。
+2. **單一冷調色相**：`--accent`（cold steel）是頁面唯一色相——裝飾與資料視覺（長條圖序列）都用它的濃淡 ramp；文字、分隔線、卡片底一律中性灰階。
 3. **數字是主角**：大號 `font-variant-numeric:tabular-nums`，等寬對齊。
 4. **線比面重**：分隔用 `--line` / `--hair` 髮絲線與 1px gap grid，少用填色。
 5. **語意色克制**：`--pos` / `--neg` 只在「真的有正負含義」時出現（財務、bull/bear），不做純裝飾。
@@ -70,10 +70,10 @@
   --pos:#37d6ad;        /* 正向 / cash engine / bull */
   --neg:#ff5a4d;        /* 負向 / burn / bear */
 
-  /* —— 資料視覺中性階（長條圖）—— */
-  --bar-1:var(--ink);   /* 最強：白 */
-  --bar-2:#8e8e95;      /* 中灰 */
-  --bar-3:#4a4a50;      /* 暗灰 */
+  /* —— 資料視覺 accent 濃淡階（長條圖）；每階自帶反白字色 —— */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;   /* 最強：滿 accent */
+  --bar-2:#5d769b; --bar-2-ink:#fff;      /* 中 accent */
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;   /* 淡 accent */
 
   /* —— Nav —— */
   --nav-bg:rgba(0,0,0,.55);
@@ -105,23 +105,24 @@
   --pos:#0e8c68;                  /* 加深的綠，淺底可讀 */
   --neg:#d23b2e;                  /* 加深的紅 */
 
-  --bar-1:var(--ink);
-  --bar-2:#6f727a;
-  --bar-3:#c9cbd1;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
 
   --nav-bg:rgba(247,247,245,.72);
   --nav-bg2:rgba(247,247,245,.88);
 }
 ```
 
-**「填色上的文字」規則**（給長條 / split / 進度條，避免兩主題互換時看不見）：
+**「填色上的文字」規則**（給長條 / split / 進度條，避免兩主題互換時看不見）：長條每階自帶 `--bar-N-ink` 反白字色，依該階填色明度配對，兩主題各自定義。
 
 ```css
-.bf-1 .v, .bf-2 .v { color:var(--bg);  }  /* 強填色 → 用底色當反白字 */
-.bf-3 .v           { color:var(--ink); }  /* 弱填色 → 用主文字色 */
+.bf-1 .v { color:var(--bar-1-ink); }  /* 滿 accent → 配深字（淺底時翻白） */
+.bf-2 .v { color:var(--bar-2-ink); }  /* 中 accent → 多為白字 */
+.bf-3 .v { color:var(--bar-3-ink); }  /* 淡 accent → 配淺 accent 字 */
 ```
 
-深色：bg=黑、ink=白 → 強填色上黑字、暗填色上白字 ✓
+split / 進度條等仍可沿用 `color:var(--bg)` / `var(--ink)` 的底色反白法。
 淺色：bg≈白、ink=黑 → 強填色上白字、淺填色上黑字 ✓ — **無需分叉，token 自動翻轉。**
 
 > FOUC 防呆：每個檔案 `<head>` 第一支 script 先讀 `localStorage.theme`（否則跟隨 `prefers-color-scheme`）寫上 `data-theme`，再載入樣式。沿用 `index.html` 的那段 inline script。
@@ -268,14 +269,14 @@ nav .links a:hover{color:var(--ink)}
 .bar-track{height:48px;background:var(--track)}            /* ← was rgba(255,255,255,.04) */
 .bar-fill{transition:width 1.2s cubic-bezier(.25,1,.4,1)}
 .bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
-.bf-1 .v,.bf-2 .v{color:var(--bg)} .bf-3 .v{color:var(--ink)}   /* 見 §2 反白規則 */
+.bf-1 .v{color:var(--bar-1-ink)} .bf-2 .v{color:var(--bar-2-ink)} .bf-3 .v{color:var(--bar-3-ink)}   /* 見 §2：每階自帶反白字色 */
 
 /* 窄條的數值標籤：bar-track 是 overflow:hidden，極短的 bar（如佔比個位數）
    把標籤關在 fill 內會被裁掉。給該 bar 加 .out，把標籤移到 fill 右側外。 */
 .bar-fill.out{overflow:visible;padding-right:0}
 .bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
 ```
-> 灰階 ramp 與軌道 token 化；正向資料可用 `--pos` 取代 `--bar-1`。
+> accent 濃淡 ramp 與軌道 token 化；正向資料可用 `--pos` 取代 `--bar-1`。
 > **窄條標籤**：只要 bar 寬度小到容不下數值文字，就替它加 `.out`（標籤外置），否則 `overflow:hidden` 會把數字裁掉——這是每張含「零頭級」分類的圖都會踩到的坑。
 
 ### 6.7 表格（財務）

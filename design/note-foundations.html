@@ -32,7 +32,10 @@
   --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06); --track:rgba(255,255,255,.06);
   --accent:#9db7d8; --mark:rgba(157,183,216,.28);
   --pos:#37d6ad; --neg:#ff5a4d;
-  --bar-1:var(--ink); --bar-2:#8e8e95; --bar-3:#4a4a50;
+  /* data-viz：accent 同色濃淡 ramp（最強→最弱） */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
   --gl-bg:#15161b;
   --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
   --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
@@ -44,7 +47,9 @@
   --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06); --track:rgba(0,0,0,.06);
   --accent:#3f6597; --mark:rgba(63,101,151,.20);
   --pos:#0e8c68; --neg:#d23b2e;
-  --bar-1:var(--ink); --bar-2:#6f727a; --bar-3:#c9cbd1;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
   --gl-bg:#ffffff;
   --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
 }
@@ -168,7 +173,7 @@ h2 .thin{font-weight:300}
 <section class="cat" id="color"><div class="wrap">
   <div class="cat-head"><div class="label"><span class="n">A</span> Color Tokens</div>
   <h2>色彩<span class="thin">系統</span></h2>
-  <p class="cat-note">單一冷調強調色 <code>--accent</code>，其餘中性灰階；語意色 <code>--pos</code>/<code>--neg</code> 只在真有正負含義時用。深淺主題只換 token、不分叉元件。每張色票下方標「深 · 淺」兩主題的值。</p></div>
+  <p class="cat-note">單一冷調色相 <code>--accent</code>（裝飾與 data-viz 都用它的濃淡），文字與分隔線用中性灰階；語意色 <code>--pos</code>/<code>--neg</code> 只在真有正負含義時用。深淺主題只換 token、不分叉元件。每張色票下方標「深 · 淺」兩主題的值。</p></div>
 
   <div class="grouplab">基底 / 文字</div>
   <div class="sw">
@@ -187,11 +192,11 @@ h2 .thin{font-weight:300}
     <div class="swatch"><div class="chip" style="background:var(--neg)"></div><div class="meta"><div class="tk">--neg</div><div class="hex">深 #ff5a4d<br>淺 #d23b2e</div><div class="use">負向／burn／bear</div></div></div>
   </div>
 
-  <div class="grouplab">資料視覺灰階（長條圖強→弱）</div>
+  <div class="grouplab">資料視覺 accent 濃淡（長條圖強→弱）</div>
   <div class="sw">
-    <div class="swatch"><div class="chip" style="background:var(--bar-1)"></div><div class="meta"><div class="tk">--bar-1</div><div class="hex">＝ --ink（白／黑）</div><div class="use">最強：主要序列</div></div></div>
-    <div class="swatch"><div class="chip" style="background:var(--bar-2)"></div><div class="meta"><div class="tk">--bar-2</div><div class="hex">深 #8e8e95<br>淺 #6f727a</div><div class="use">中灰：次要序列</div></div></div>
-    <div class="swatch"><div class="chip" style="background:var(--bar-3)"></div><div class="meta"><div class="tk">--bar-3</div><div class="hex">深 #4a4a50<br>淺 #c9cbd1</div><div class="use">暗／淺灰：弱序列</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--bar-1)"></div><div class="meta"><div class="tk">--bar-1</div><div class="hex">深 #9db7d8<br>淺 #3f6597</div><div class="use">滿 accent：主要序列</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--bar-2)"></div><div class="meta"><div class="tk">--bar-2</div><div class="hex">深 #5d769b<br>淺 #84a0c5</div><div class="use">中 accent：次要序列</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--bar-3)"></div><div class="meta"><div class="tk">--bar-3</div><div class="hex">深 #313d4d<br>淺 #d3deec</div><div class="use">淡 accent：弱序列</div></div></div>
   </div>
 
   <div class="grouplab">線與面（多為半透明，疊在面上才看得出）</div>

@@ -39,7 +39,10 @@
   --mark:rgba(157,183,216,.28);     /* 搜尋高亮 */
   --pos:#37d6ad;                    /* 正向 / cash engine / bull */
   --neg:#ff5a4d;                    /* 負向 / burn / bear */
-  --bar-1:var(--ink); --bar-2:#8e8e95; --bar-3:#4a4a50;  /* data-viz 灰階 */
+  /* data-viz：accent 同色濃淡 ramp（最強→最弱） */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
   --gl-bg:#15161b;                  /* glossary tooltip 面 */
   --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
   --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
@@ -52,7 +55,9 @@
   --track:rgba(0,0,0,.06);
   --accent:#3f6597; --mark:rgba(63,101,151,.20);
   --pos:#0e8c68; --neg:#d23b2e;
-  --bar-1:var(--ink); --bar-2:#6f727a; --bar-3:#c9cbd1;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
   --gl-bg:#ffffff;
   --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
 }
@@ -206,7 +211,7 @@ p.body strong{color:var(--ink);font-weight:500}
   display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
 .bar-fill .v{font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
 .bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
-.bf-1 .v,.bf-2 .v{color:var(--bg)} .bf-3 .v{color:var(--ink)}   /* §2 填色反白規則 */
+.bf-1 .v{color:var(--bar-1-ink)} .bf-2 .v{color:var(--bar-2-ink)} .bf-3 .v{color:var(--bar-3-ink)}   /* §2 每階自帶反白字色 */
 .bar-fill.out{overflow:visible;padding-right:0}                  /* 窄條：標籤外置，避免被 track 的 overflow:hidden 裁掉 */
 .bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
 .cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}
@@ -542,7 +547,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <section class="cat" id="charts"><div class="wrap">
   <div class="cat-head"><div class="label"><span class="n">09</span> Horizontal Bars</div>
   <h2>橫條<span class="thin">圖</span></h2>
-  <p class="cat-note">框內 <code>.ct</code> 小標 + <code>.cs</code> 大標 + <code>.bars</code>。每列 <code>.bar-lab</code>（b 粗標 + 說明）+ <code>.bar-track/.bar-fill data-w</code>。灰階強弱用 <code>.bf-1/2/3</code>，正向資料可改 <code>--pos</code>。底部 <code>.cap</code> 註腳。<strong>data-w 是相對視覺比例，數字白名單照樣要核對。</strong>窄條（data-w 個位數）容不下標籤時，替該 <code>.bar-fill</code> 加 <code>.out</code> 把數值移到條外，否則會被裁掉。</p></div>
+  <p class="cat-note">框內 <code>.ct</code> 小標 + <code>.cs</code> 大標 + <code>.bars</code>。每列 <code>.bar-lab</code>（b 粗標 + 說明）+ <code>.bar-track/.bar-fill data-w</code>。序列強弱用 <code>.bf-1/2/3</code>（accent 同色濃淡，最強→最弱），正向資料可改 <code>--pos</code>。底部 <code>.cap</code> 註腳。<strong>data-w 是相對視覺比例，數字白名單照樣要核對。</strong>窄條（data-w 個位數）容不下標籤時，替該 <code>.bar-fill</code> 加 <code>.out</code> 把數值移到條外，否則會被裁掉。</p></div>
   <div class="chart">
     <div class="ct">Launch Cadence</div>
     <div class="cs">從一年 160 次，走向一天兩三次</div>
