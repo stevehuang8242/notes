@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>基礎 · Colors &amp; Type Foundations</title>
+<!--
+  Steve's Notes 的「色彩 + 字型」基礎參考（DESIGN-SYSTEM.md §2/§3 的渲染版）。
+  · 與 note-components.html 同住 design/ 子目錄 → build/部署都掃不到。
+  · 用的是「嚴格單一」收斂後的 canonical token；右上角切深／淺，色票即時翻轉。
+  · 改值時：DESIGN-SYSTEM.md 是 single source of truth，本檔與它對齊。
+-->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS（canonical 超集，與 note-components.html §1 一致） ── */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06); --track:rgba(255,255,255,.06);
+  --accent:#9db7d8; --mark:rgba(157,183,216,.28);
+  --pos:#37d6ad; --neg:#ff5a4d;
+  --bar-1:var(--ink); --bar-2:#8e8e95; --bar-3:#4a4a50;
+  --gl-bg:#15161b;
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06); --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:var(--ink); --bar-2:#6f727a; --bar-3:#c9cbd1;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+
+/* ── base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ── NAV + theme toggle ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:30px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* ── 目錄排版 ── */
+.cat{padding:66px 0;border-top:1px solid var(--hair)}
+.cat-head{margin-bottom:32px}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em}
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em}
+h2 .thin{font-weight:300}
+.cat-note{font-size:13.5px;color:var(--ink3);line-height:1.75;margin:6px 0 24px;max-width:780px}
+.cat-note code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink2);
+  background:var(--panel);padding:1px 6px;border-radius:3px}
+.intro h1{font-size:clamp(34px,5vw,58px);font-weight:600;line-height:1.05;letter-spacing:.01em}
+.intro .eyebrow{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);margin-bottom:22px}
+.intro p{font-size:17px;font-weight:300;line-height:1.7;color:var(--ink2);max-width:760px;margin-top:20px}
+.grouplab{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink3);
+  margin:38px 0 16px}
+
+/* ── 色票 ── */
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.swatch{background:var(--surface)}
+.swatch .chip{height:88px;display:grid;place-items:center}
+.swatch .chip i{display:block;width:78%;height:2px}            /* 線示意 */
+.swatch .meta{padding:13px 16px;border-top:1px solid var(--hair)}
+.swatch .tk{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--ink);font-weight:600}
+.swatch .hex{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--ink3);margin-top:6px;line-height:1.5}
+.swatch .use{font-size:12px;color:var(--ink2);margin-top:9px;line-height:1.5}
+
+/* ── 字級樣本 ── */
+.ty{border-top:1px solid var(--line)}
+.ty-row{padding:26px 0;border-bottom:1px solid var(--hair)}
+.ty-spec{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ink3);
+  margin-bottom:14px;letter-spacing:.02em;display:flex;flex-wrap:wrap;gap:6px 18px}
+.ty-spec b{color:var(--ink2);font-weight:600}
+/* 各角色（canonical 單一值） */
+.t-h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.t-h1 .thin{font-weight:300}
+.t-h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em}
+.t-h2 .thin{font-weight:300}
+.t-h3{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:.01em}
+.t-lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2)}
+.t-body{font-size:18px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.t-body strong{color:var(--ink);font-weight:500}
+.t-quote{font-size:clamp(24px,3.6vw,40px);font-weight:300;line-height:1.34;letter-spacing:.005em}
+.t-quote b{font-weight:600}
+.t-eyebrow{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3)}
+.t-meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3)}
+.t-value{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums}
+.t-value small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px}
+
+.principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:8px;background:var(--hair);border:1px solid var(--hair)}
+.pr{background:var(--surface);padding:24px 22px}
+.pr .h{font-size:14px;font-weight:600;margin-bottom:8px}
+.pr p{font-size:13px;font-weight:300;color:var(--ink2);line-height:1.65}
+@media(max-width:760px){.principles{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="../index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">Foundations</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#color">Color</a>
+      <a href="#type">Type</a>
+      <a href="note-components.html">Components ↗</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- INTRO -->
+<header class="cat intro" style="padding-top:130px;border-top:none"><div class="wrap">
+  <div class="eyebrow">Steve's Notes · Design System</div>
+  <h1>色彩 &amp; 字型<br>Foundations</h1>
+  <p>把設計系統的兩個底層——<strong style="color:var(--ink);font-weight:500">色彩 token</strong> 與 <strong style="color:var(--ink);font-weight:500">字級階層</strong>——抽出來單獨看。色票與字級都用「嚴格單一」收斂後的 canonical 值；右上角切深／淺主題，每張色票會即時翻轉，驗證同一個 token 在兩主題都成立。元件怎麼用見 <a href="note-components.html" style="color:var(--accent)">note-components.html</a>。</p>
+</div></header>
+
+<!-- ════════ COLOR ════════ -->
+<section class="cat" id="color"><div class="wrap">
+  <div class="cat-head"><div class="label"><span class="n">A</span> Color Tokens</div>
+  <h2>色彩<span class="thin">系統</span></h2>
+  <p class="cat-note">單一冷調強調色 <code>--accent</code>，其餘中性灰階；語意色 <code>--pos</code>/<code>--neg</code> 只在真有正負含義時用。深淺主題只換 token、不分叉元件。每張色票下方標「深 · 淺」兩主題的值。</p></div>
+
+  <div class="grouplab">基底 / 文字</div>
+  <div class="sw">
+    <div class="swatch"><div class="chip" style="background:var(--bg)"></div><div class="meta"><div class="tk">--bg</div><div class="hex">深 #000<br>淺 #f7f7f5</div><div class="use">頁面底</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--surface)"></div><div class="meta"><div class="tk">--surface</div><div class="hex">深 #000<br>淺 #ffffff</div><div class="use">卡片／區塊面</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--ink)"></div><div class="meta"><div class="tk">--ink</div><div class="hex">深 #fff<br>淺 #16181d</div><div class="use">主文字</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--ink2)"></div><div class="meta"><div class="tk">--ink2</div><div class="hex">深 #b9b9bd<br>淺 #4a4d55</div><div class="use">內文／次文字</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--ink3)"></div><div class="meta"><div class="tk">--ink3</div><div class="hex">深 #7c7c82<br>淺 #85888f</div><div class="use">標籤／註解／弱化</div></div></div>
+  </div>
+
+  <div class="grouplab">強調 / 語意</div>
+  <div class="sw">
+    <div class="swatch"><div class="chip" style="background:var(--accent)"></div><div class="meta"><div class="tk">--accent</div><div class="hex">深 #9db7d8<br>淺 #3f6597</div><div class="use">連結／編號／focus（唯一裝飾色）</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--surface);font-size:15px;color:var(--ink)"><span style="background:var(--mark);padding:3px 10px;border-radius:3px">高亮 mark</span></div><div class="meta"><div class="tk">--mark</div><div class="hex">深 rgba(157,183,216,.28)<br>淺 rgba(63,101,151,.20)</div><div class="use">搜尋命中高亮</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--pos)"></div><div class="meta"><div class="tk">--pos</div><div class="hex">深 #37d6ad<br>淺 #0e8c68</div><div class="use">正向／cash engine／bull</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--neg)"></div><div class="meta"><div class="tk">--neg</div><div class="hex">深 #ff5a4d<br>淺 #d23b2e</div><div class="use">負向／burn／bear</div></div></div>
+  </div>
+
+  <div class="grouplab">資料視覺灰階（長條圖強→弱）</div>
+  <div class="sw">
+    <div class="swatch"><div class="chip" style="background:var(--bar-1)"></div><div class="meta"><div class="tk">--bar-1</div><div class="hex">＝ --ink（白／黑）</div><div class="use">最強：主要序列</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--bar-2)"></div><div class="meta"><div class="tk">--bar-2</div><div class="hex">深 #8e8e95<br>淺 #6f727a</div><div class="use">中灰：次要序列</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--bar-3)"></div><div class="meta"><div class="tk">--bar-3</div><div class="hex">深 #4a4a50<br>淺 #c9cbd1</div><div class="use">暗／淺灰：弱序列</div></div></div>
+  </div>
+
+  <div class="grouplab">線與面（多為半透明，疊在面上才看得出）</div>
+  <div class="sw">
+    <div class="swatch"><div class="chip"><i style="background:var(--line)"></i></div><div class="meta"><div class="tk">--line</div><div class="hex">深 rgba(255,255,255,.16)<br>淺 rgba(0,0,0,.15)</div><div class="use">主分隔線／邊框／tag 框</div></div></div>
+    <div class="swatch"><div class="chip"><i style="background:var(--hair)"></i></div><div class="meta"><div class="tk">--hair</div><div class="hex">深 rgba(255,255,255,.10)<br>淺 rgba(0,0,0,.08)</div><div class="use">髮絲線／grid gap 格線</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--panel)"></div><div class="meta"><div class="tk">--panel</div><div class="hex">深 rgba(255,255,255,.035)<br>淺 rgba(0,0,0,.04)</div><div class="use">輸入框／hover 底／hl 列</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--panel2)"></div><div class="meta"><div class="tk">--panel2</div><div class="hex">深 rgba(255,255,255,.06)<br>淺 rgba(0,0,0,.06)</div><div class="use">focus／強化底</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--track)"></div><div class="meta"><div class="tk">--track</div><div class="hex">深 rgba(255,255,255,.06)<br>淺 rgba(0,0,0,.06)</div><div class="use">進度條／bar 軌道</div></div></div>
+  </div>
+
+  <div class="grouplab">Nav / Glossary 面</div>
+  <div class="sw">
+    <div class="swatch"><div class="chip" style="background:var(--nav-bg)"></div><div class="meta"><div class="tk">--nav-bg</div><div class="hex">深 rgba(0,0,0,.55)<br>淺 rgba(247,247,245,.72)</div><div class="use">nav 毛玻璃底（未捲動）</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--nav-bg2)"></div><div class="meta"><div class="tk">--nav-bg2</div><div class="hex">深 rgba(0,0,0,.78)<br>淺 rgba(247,247,245,.88)</div><div class="use">nav 底（已捲動）</div></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--gl-bg)"></div><div class="meta"><div class="tk">--gl-bg</div><div class="hex">深 #15161b<br>淺 #ffffff</div><div class="use">glossary tooltip 浮層面</div></div></div>
+  </div>
+</div></section>
+
+<!-- ════════ TYPE ════════ -->
+<section class="cat" id="type"><div class="wrap">
+  <div class="cat-head"><div class="label"><span class="n">B</span> Typography</div>
+  <h2>字級<span class="thin">階層</span></h2>
+  <p class="cat-note">字體一律 <code>--sf</code>：Saira（拉丁／數字）+ PingFang TC／微軟正黑（中文）。簽名手法是<strong>細體大字</strong>的反差。下列每個角色用 canonical 單一值渲染，規格列在上方。</p></div>
+
+  <div class="ty">
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Hero H1</b></span><span>clamp(33,6.1vw,70)</span><span>w600</span><span>lh1.28</span><span>ls.005em</span><span>--ink</span></div>
+      <div class="t-h1">不是火箭公司。<span class="thin">是一台</span>現金引擎。</div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Section H2</b></span><span>clamp(30,4.6vw,52)</span><span>w600</span><span>lh1.08</span><span>ls.01em</span><span>--ink</span></div>
+      <div class="t-h2">拆開三個引擎的<span class="thin">單位經濟學</span></div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Card H3</b></span><span>23px</span><span>w600</span><span>lh1.2</span><span>ls.01em</span><span>--ink</span></div>
+      <div class="t-h3">現金引擎 · 皇冠寶石</div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Lede 導言</b></span><span>clamp(18,2.2vw,22)</span><span>w300</span><span>lh1.55</span><span>--ink2</span></div>
+      <div class="t-lede">這是 lede 導言：細體、較大字級，放在標題正下方，用一兩句把核心張力講清楚。</div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Body 內文</b></span><span>18px</span><span>w300</span><span>lh1.7</span><span>--ink2（strong→ink/500）</span></div>
+      <div class="t-body">這是內文：<strong>需要強調的詞用 strong 提亮到主文字色</strong>，其餘以 ink2 細體承載，數字一律 <span class="num">tabular-nums</span> 等寬對齊。</div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Pull-quote 引言</b></span><span>clamp(24,3.6vw,40)</span><span>w300</span><span>lh1.34</span><span>ls.005em</span><span>--ink（b→600）</span></div>
+      <div class="t-quote">你願意為「再成功兩次」這件事，付<b>一兆美元的溢價</b>嗎？</div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Eyebrow / Label</b></span><span>12px</span><span>w600</span><span>.26em UPPER</span><span>--ink3</span><span>中文不套 uppercase</span></div>
+      <div class="t-eyebrow">By the Numbers</div>
+    </div>
+    <div class="ty-row">
+      <div class="ty-spec"><span><b>Meta / 註腳</b></span><span>12px</span><span>w400</span><span>.18em UPPER</span><span>--ink3</span></div>
+      <div class="t-meta">BG2 Pod · 2026.06.12 · Gavin Baker</div>
+    </div>
+    <div class="ty-row" style="border-bottom:none">
+      <div class="ty-spec"><span><b>大數字 Value</b></span><span>clamp(40,5.6vw,66)</span><span>w500</span><span>lh1</span><span>tabular-nums</span><span>--ink／語意色</span></div>
+      <div class="t-value num">$1.77<small>兆</small> <span style="color:var(--pos)">+4,423</span> <span style="color:var(--neg)">(6,355)</span></div>
+    </div>
+  </div>
+
+  <div class="grouplab">簽名手法</div>
+  <div class="principles">
+    <div class="pr"><div class="h">細體大字反差</div><p>標題／引言用 <code style="font-family:ui-monospace,monospace;font-size:.85em">font-weight:300</code> 的大字，是本站的招牌反差。粗細混排（<code style="font-family:ui-monospace,monospace;font-size:.85em">.thin</code>）製造節奏。</p></div>
+    <div class="pr"><div class="h">UPPERCASE 只給英數</div><p>小型大寫 + 寬字距（.2em↑）只用於拉丁／數字標籤；<strong style="color:var(--ink);font-weight:500">中文一律不套 uppercase</strong>。</p></div>
+    <div class="pr"><div class="h">數字 tabular-nums</div><p>所有數字加 <code style="font-family:ui-monospace,monospace;font-size:.85em">.num</code>（<code style="font-family:ui-monospace,monospace;font-size:.85em">font-variant-numeric:tabular-nums</code>），等寬對齊、不跳動。</p></div>
+  </div>
+</div></section>
+
+<script>
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>
