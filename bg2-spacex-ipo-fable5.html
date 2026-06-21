@@ -10,16 +10,44 @@
 <meta name="note:title" content="當 SpaceX 偷偷蓋了一座 AWS">
 <meta name="note:dek" content="拆解 1.77 兆美元的 SpaceX IPO、Fable 5 模型競賽，以及那道讓人睡不著的算式：1.5 兆資本支出對上 3,000 億 AI 營收。">
 <meta name="note:people" content="Gavin Baker · Andrew Fox · Clark Tang · Brad Gerstner">
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* —— Canonical token superset：每個 note 檔複製同一份（見 DESIGN-SYSTEM.md §2） —— */
 :root{
-  --bg:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
   --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
-  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
-  --accent:#9db7d8; /* restrained cold steel */
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06); --track:rgba(255,255,255,.06);
+  --accent:#9db7d8; --mark:rgba(157,183,216,.28);
+  --pos:#37d6ad; --neg:#ff5a4d;
+  --bar-1:var(--ink); --bar-2:#8e8e95; --bar-3:#4a4a50;
+  --gl-bg:#15161b;
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
   --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06); --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:var(--ink); --bar-2:#6f727a; --bar-3:#c9cbd1;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -27,6 +55,7 @@ body{
   font-family:var(--sf);background:var(--bg);color:var(--ink);
   font-size:17px;line-height:1.6;font-weight:400;letter-spacing:.01em;
   -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease;
 }
 .wrap{max-width:1080px;margin:0 auto;padding:0 30px}
 a{color:var(--ink);text-decoration:none}
@@ -37,49 +66,60 @@ a{color:var(--ink);text-decoration:none}
 
 /* ---------- NAV ---------- */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
-  background:rgba(0,0,0,.55);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
   border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
-nav.scrolled{border-bottom-color:var(--hair);background:rgba(0,0,0,.78)}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
 nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
-nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 nav .links{display:flex;gap:30px}
 nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
 nav .links a:hover{color:var(--ink)}
-@media(max-width:760px){nav .links{display:none}}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
 
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;text-transform:uppercase;
   letter-spacing:.2em;padding:13px 26px;border:1px solid var(--line);border-radius:2px;color:var(--ink);
   transition:background .25s,color .25s,border-color .25s}
-.btn:hover{background:var(--ink);color:#000;border-color:var(--ink)}
+.btn:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .btn.ghost{border-color:transparent;padding-left:0;padding-right:0}
 .btn.ghost:hover{background:transparent;color:var(--ink2)}
 .btn .ar{font-size:14px}
 
-/* ---------- HERO ---------- */
-.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
-  text-align:center;position:relative;padding:100px 0 80px;overflow:hidden}
+/* ---------- HERO（canonical：靠左 ticker） ---------- */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(120% 90% at 50% 120%, rgba(80,110,150,.30), transparent 55%),
-            radial-gradient(80% 60% at 50% -10%, rgba(120,140,170,.14), transparent 60%);}
-.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;pointer-events:none;
-  background:linear-gradient(to top,rgba(0,0,0,.9),transparent)}
-.hero .inner{position:relative;z-index:1;width:100%;max-width:100%}
-.hero .eyebrow{font-size:12.5px;font-weight:500;text-transform:uppercase;letter-spacing:.4em;color:var(--ink2);margin-bottom:30px}
-.hero h1{font-size:clamp(46px,9vw,118px);font-weight:600;line-height:.98;letter-spacing:.01em}
-.hero h1 .line2{font-weight:300}
-.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--ink);padding-bottom:4px;line-height:1}
-.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:640px;margin:34px auto 0;line-height:1.6}
-.hero .cta{margin-top:46px;display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
-.hero .scrollhint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:1;
-  font-size:10.5px;text-transform:uppercase;letter-spacing:.3em;color:var(--ink3);animation:bob 2.4s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0);opacity:.6}50%{transform:translateX(-50%) translateY(6px);opacity:1}}
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none} /* 淺色用純色底，不要光暈 */
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 u{text-decoration:none;color:var(--pos)}
+.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--ink);padding-bottom:2px;line-height:1}
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+.hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+.hero .cta{margin-top:40px;display:flex;gap:18px;flex-wrap:wrap}
 
 /* ---------- section ---------- */
-section{padding:120px 0;border-top:1px solid var(--hair);position:relative}
-.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.28em;color:var(--ink3);
+section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
   display:flex;align-items:center;gap:16px;margin-bottom:26px}
-.label .ln{height:1px;width:46px;background:var(--line)}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em}
 h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em;margin-bottom:20px}
 h2 .thin{font-weight:300}
 .lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:720px}
@@ -95,7 +135,7 @@ p.body strong{color:var(--ink);font-weight:500}
 .bignums{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:20px;border-top:1px solid var(--line)}
 .bignum{padding:38px 26px 34px;border-right:1px solid var(--hair)}
 .bignum:last-child{border-right:none}
-.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums}
+.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums;white-space:nowrap}
 .bignum .v small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:.02em}
 .bignum .l{font-size:14px;font-weight:300;color:var(--ink2);margin-top:18px;line-height:1.5;letter-spacing:.01em}
 @media(max-width:760px){.bignums{grid-template-columns:1fr 1fr}.bignum{border-bottom:1px solid var(--hair)}.bignum:nth-child(2){border-right:none}}
@@ -103,7 +143,7 @@ p.body strong{color:var(--ink);font-weight:500}
 /* ---------- cards ---------- */
 .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:54px;background:var(--hair);border:1px solid var(--hair)}
 .bento2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:44px;background:var(--hair);border:1px solid var(--hair)}
-.card{background:#000;padding:40px 34px}
+.card{background:var(--surface);padding:40px 34px}
 .card .ico{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);display:block;margin-bottom:22px}
 .card h3{font-size:23px;font-weight:600;letter-spacing:.01em;margin-bottom:14px}
 .card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
@@ -115,17 +155,17 @@ p.body strong{color:var(--ink);font-weight:500}
 .chart .ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--ink3);margin-bottom:8px}
 .chart .cs{font-size:23px;font-weight:500;letter-spacing:.01em;margin-bottom:38px}
 .bars{display:flex;flex-direction:column;gap:1px;background:var(--hair)}
-.bar-row{display:grid;grid-template-columns:160px 1fr;gap:0;align-items:stretch;background:#000}
+.bar-row{display:grid;grid-template-columns:160px 1fr;gap:0;align-items:stretch;background:var(--surface)}
 .bar-lab{font-size:13px;font-weight:300;color:var(--ink2);display:flex;flex-direction:column;justify-content:center;
   align-items:flex-end;text-align:right;padding:0 22px 0 0;letter-spacing:.02em}
 .bar-lab b{color:var(--ink);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;margin-bottom:3px}
-.bar-track{position:relative;height:48px;background:rgba(255,255,255,.04);overflow:hidden}
+.bar-track{position:relative;height:48px;background:var(--track);overflow:hidden}
 .bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;transition:width 1.3s cubic-bezier(.25,1,.4,1);
   display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
-.bar-fill .v{font-size:13px;font-weight:600;color:#000;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
-.bf-1{background:var(--ink)} /* primary white */
-.bf-2{background:#8e8e95} /* mid grey */
-.bf-3{background:#4a4a50} /* dark grey */
+.bar-fill .v{font-size:13px;font-weight:600;color:var(--bg);white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.bf-1{background:var(--bar-1,var(--ink))} /* primary */
+.bf-2{background:var(--bar-2)} /* mid grey */
+.bf-3{background:var(--bar-3)} /* dark grey */
 .bf-3 .v{color:var(--ink)}
 .cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;letter-spacing:.01em;max-width:760px}
 
@@ -134,7 +174,7 @@ p.body strong{color:var(--ink);font-weight:500}
 .split>div{display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12.5px;flex:0;
   transition:flex 1s cubic-bezier(.25,1,.4,1);text-transform:uppercase;letter-spacing:.1em;
   font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;white-space:nowrap}
-.s-front{background:var(--ink);color:#000} .s-open{background:#3a3a40;color:var(--ink)}
+.s-front{background:var(--ink);color:var(--bg)} .s-open{background:var(--bar-3);color:var(--ink)}
 .split-lab{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink3);margin:24px 0 10px}
 
 /* timeline */
@@ -146,7 +186,7 @@ p.body strong{color:var(--ink);font-weight:500}
 
 /* bull / bear */
 .bb{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:50px;background:var(--hair);border:1px solid var(--hair)}
-.bb-col{padding:40px 36px;background:#000}
+.bb-col{padding:40px 36px;background:var(--surface)}
 .bb-col .h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;margin-bottom:20px;color:var(--ink3)}
 .bb-col .h .dot{color:var(--ink)}
 .bb-col p{font-size:17px;font-weight:300;line-height:1.6;color:var(--ink2)}
@@ -168,13 +208,17 @@ footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
 footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:30px auto 0;line-height:1.7;letter-spacing:.01em}
 
 /* reveal */
-.rev{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease}
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
 .rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev,.bar-fill,.split>div{transition:none!important;opacity:1;transform:none}
+}
 
 @media(max-width:760px){
-  section{padding:84px 0}
-  .hero{padding:96px 0 72px}
-  .hero h1{font-size:clamp(26px,7vw,42px);line-height:1.14}
+  section{padding:80px 0}
+  .hero{padding:104px 0 36px}
+  .hero h1{line-height:1.2}
   .hero h1 .xline{border-bottom-width:2px}
   .hero .sub{font-size:16px;margin-top:26px}
   .thesis-q{font-size:21px;line-height:1.42}
@@ -192,28 +236,35 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 
 <!-- ============ NAV ============ -->
 <nav id="nav"><div class="wrap">
-  <div class="brand">SpaceX&nbsp;IPO</div>
-  <div class="links">
-    <a href="#numbers">Overview</a>
-    <a href="#launch">Launch</a>
-    <a href="#compute">Compute</a>
-    <a href="#models">Models</a>
-    <a href="#market">Market</a>
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">SpaceX&nbsp;IPO</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#numbers">Overview</a>
+      <a href="#launch">Launch</a>
+      <a href="#compute">Compute</a>
+      <a href="#models">Models</a>
+      <a href="#market">Market</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
   </div>
 </div></nav>
 
-<!-- ============ HERO ============ -->
+<!-- ============ HERO（canonical：靠左 ticker） ============ -->
 <header class="hero"><div class="inner wrap">
-  <div class="eyebrow">BG2 Pod · 2026.06.12</div>
-  <h1>當 SpaceX 偷偷<br><span class="line2">蓋了一座 <span class="xline">AWS</span></span></h1>
+  <div class="ticker">
+    <span class="tk">BG2 POD</span>
+    <span class="mt">Podcast · 2026.06.12 · YouTube</span>
+  </div>
+  <h1>當 SpaceX 偷偷<br><span class="thin">蓋了一座 <span class="xline">AWS</span></span></h1>
   <p class="sub">拆解 1.77 兆美元的 SpaceX IPO、Fable 5 模型競賽,以及那道讓人睡不著的算式:1.5 兆資本支出,對上 3,000 億 AI 營收。</p>
   <div class="cta">
     <a class="btn" href="https://www.youtube.com/watch?v=Tx9jT2c6e3U" target="_blank" rel="noopener">觀看原片 <span class="ar">↗</span></a>
     <a class="btn ghost" href="#thesis">核心論點 <span class="ar">↓</span></a>
   </div>
-</div>
-<div class="scrollhint">Scroll</div>
-</header>
+</div></header>
 
 <!-- ============ THESIS ============ -->
 <section id="thesis" style="text-align:center"><div class="wrap rev" style="display:flex;flex-direction:column;align-items:center">
@@ -224,7 +275,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ BY THE NUMBERS ============ -->
 <section id="numbers"><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>By the Numbers</div>
+    <div class="label"><span class="n">00</span> By the Numbers</div>
     <h2>這場 IPO 的<span class="thin">量級</span></h2>
   </div>
   <div class="bignums rev">
@@ -238,7 +289,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 1 · 三大支柱 ============ -->
 <section id="launch"><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>01 / Business Model</div>
+    <div class="label"><span class="n">01</span> Business Model</div>
     <h2>不再只是<span class="thin">火箭公司</span></h2>
     <p class="lede">直到六個月前,本業還是發射加 Starlink。然後它併進 xAI、併進 Cursor、再簽下大型算力交易——一個 AI 超大規模業者,在大家眼皮底下成形。</p>
   </div>
@@ -264,7 +315,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 2 · Elon Web Services ============ -->
 <section id="compute"><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>02 / Elon Web Services</div>
+    <div class="label"><span class="n">02</span> Elon Web Services</div>
     <h2>「速度根本就是<span class="thin">成本</span>」</h2>
     <p class="lede">過去六週最大的驚喜:Elon 跟 Anthropic、Google 簽下大型算力交易,30 天內把 SpaceX 從不在 AI 賽局裡,變成第四大算力雲。Jensen 稱他是「獨一無二的存在」。</p>
   </div>
@@ -291,7 +342,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 3 · 軌道算力 ============ -->
 <section><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>03 / Orbital Compute</div>
+    <div class="label"><span class="n">03</span> Orbital Compute</div>
     <h2>把資料中心<span class="thin">射上太空</span></h2>
     <p class="lede">每次 Starship 發射約 100 公噸、回推約 5 MW 容量。在資料中心一半的物料清單上,太空成本是地面的五分之一。對 IPO 估值並非必要,但是一個重要的選擇權。</p>
   </div>
@@ -315,7 +366,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 4 · Cursor / xAI ============ -->
 <section id="models"><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>04 / The Underrated Variable</div>
+    <div class="label"><span class="n">04</span> The Underrated Variable</div>
     <h2>被「直接下載」進 SpaceX<br>的<span class="thin">前沿模型團隊</span></h2>
     <p class="lede">xAI 買下 Cursor——700–800 人、今年營收上看年化 100 億美元——把一個本來受算力限制的團隊,接上了海量算力。Gavin 認為這是整個故事裡受到最少關注、卻可能有最大上行驚喜的一塊。</p>
   </div>
@@ -331,7 +382,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 5 · 多空 / 部位 ============ -->
 <section><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>05 / Valuation · Bull & Bear</div>
+    <div class="label"><span class="n">05</span> Valuation · Bull &amp; Bear</div>
     <h2>真能在四年內<span class="thin">把營收翻八倍</span>嗎?</h2>
   </div>
 
@@ -358,7 +409,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 6 · Fable 5 ============ -->
 <section><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>06 / Fable 5 · Long-Running</div>
+    <div class="label"><span class="n">06</span> Fable 5 · Long-Running</div>
     <h2>為什麼<span class="thin">快照式基準測試壞掉了</span></h2>
     <p class="lede">Anthropic 發表 Fable 5(本質上是 Mythos,加上分類器與防護,觸發時退回 Opus 4.8)。Karpathy 說它在所有基準 SOTA——但真正特別的是長時間運行任務。Noam Brown:X 軸該從題目換成時間 / token / 算力。</p>
   </div>
@@ -374,7 +425,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 7 · 前沿 vs 開源 ============ -->
 <section><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>07 / Frontier vs Open Source</div>
+    <div class="label"><span class="n">07</span> Frontier vs Open Source</div>
     <h2>兩件事<span class="thin">可以同時成立</span></h2>
     <p class="lede">大多數經濟價值歸於前沿,但全世界消耗的大多數 token 是開源的。兩年前前沿不會攫取多數營收的預測,已被決定性證明錯誤。</p>
   </div>
@@ -395,7 +446,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 8 · 資本支出 ============ -->
 <section id="market"><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>08 / The Math That Keeps You Up</div>
+    <div class="label"><span class="n">08</span> The Math That Keeps You Up</div>
     <h2>1.5 兆 <span class="thin">vs</span> 3,000 億</h2>
     <p class="lede">這帳算得過去嗎?一旦市場對它緊張起來,整個半導體複合體就會大跌一波。</p>
   </div>
@@ -422,7 +473,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <!-- ============ 9 · 收尾 ============ -->
 <section><div class="wrap">
   <div class="rev">
-    <div class="label"><span class="ln"></span>09 / The Next Trillion</div>
+    <div class="label"><span class="n">09</span> The Next Trillion</div>
     <h2>三家公司,<span class="thin">一半的時間</span></h2>
     <p class="lede">過去七年,Mag 7 增加了一兆美元的營收——帶來 17 兆的市值。而現在的預測是:只靠三家公司,在一半的時間內,再加一兆。</p>
   </div>
@@ -467,6 +518,18 @@ const io=new IntersectionObserver((es)=>{
   });
 },{threshold:.16});
 document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+
+// theme toggle (initial theme set by the inline <head> script to avoid FOUC)
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
 </script>
 </body>
 </html>
