@@ -53,33 +53,41 @@ nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacin
 nav .links{display:flex;gap:30px}
 nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
 nav .links a:hover{color:var(--ink)}
-.nav-right{display:flex;align-items:center;gap:24px}
-.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
-.theme-toggle:hover{color:var(--ink);background:var(--panel)}
-.theme-toggle svg{width:17px;height:17px;display:block}
+.nav-right{display:flex;align-items:center;gap:14px}
+/* shared round icon buttons (search + theme) */
+.icon-btn{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;flex:none;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.icon-btn:hover{color:var(--ink);background:var(--panel)}
+.icon-btn svg{width:17px;height:17px;display:block}
+/* collapsible search: just an icon by default, a rounded field expands on click */
+.nav-search{display:flex;align-items:center;gap:0;transition:gap .2s ease}
+.nav-search.open{gap:6px}
+.ns-input{width:0;min-width:0;opacity:0;padding:0;border:1px solid transparent;border-radius:19px;background:var(--panel);color:var(--ink);font-family:var(--sf);font-size:14px;font-weight:300;letter-spacing:.01em;outline:none;transition:width .28s ease,opacity .2s ease,padding .28s ease,border-color .2s ease,background .2s ease}
+.ns-input::placeholder{color:var(--ink3)}
+.nav-search.open .ns-input{width:clamp(150px,32vw,240px);opacity:1;padding:4px 16px;border-color:var(--line)}
+.nav-search.open .ns-input:focus{border-color:var(--accent);background:var(--panel2)}
 .theme-toggle .icon-moon{display:none}
 [data-theme="light"] .theme-toggle .icon-sun{display:none}
 [data-theme="light"] .theme-toggle .icon-moon{display:block}
 @media(max-width:760px){nav .links{display:none}}
+@media(max-width:560px){nav.searching .brand{display:none}}
 
-/* MASTHEAD — Medium-style author header */
-.masthead{padding:130px 0 54px}
-.mh-title{font-size:clamp(32px,5vw,50px);font-weight:600;line-height:1.12;letter-spacing:.01em}
-.mh-bio{font-size:clamp(15px,1.8vw,18px);font-weight:300;color:var(--ink2);max-width:600px;margin-top:18px;line-height:1.75}
-#index{padding-top:50px}
+/* no masthead — list leads; first section just clears the fixed nav */
+#index{padding-top:96px;border-top:0}
+.accent{color:var(--accent)}
 
 /* SECTION */
 section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
 .label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.28em;color:var(--ink3);display:flex;align-items:center;gap:16px;margin-bottom:46px}
 .label .ln{height:1px;width:46px;background:var(--line)}
 .label .count{margin-left:auto;color:var(--ink2);font-weight:500}
-.list-head{display:flex;justify-content:flex-end;margin:6px 0 14px}
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:6px 0 14px;min-height:16px}
+.list-head .search-status{margin-top:0}
 .list-head .count{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3)}
+.list-label{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3)}
 
 /* INDEX LIST — 本頁的 signature */
 .idx{border-top:1px solid var(--line)}
-.ep{display:grid;grid-template-columns:72px 1fr 32px;gap:0 24px;align-items:center;padding:34px 14px;border-bottom:1px solid var(--hair);position:relative;transition:background .25s}
-.ep:hover{background:var(--panel)}
+.ep{display:grid;grid-template-columns:72px 1fr;gap:0 24px;align-items:center;padding:34px 14px;border-bottom:1px solid var(--hair);position:relative}
 .ep:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ep-no{font-size:15px;font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;letter-spacing:.06em;align-self:start;padding-top:5px;transition:color .25s}
 .ep:hover .ep-no{color:var(--accent)}
@@ -90,22 +98,12 @@ section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
 .ep:hover .ep-title{color:var(--accent)}
 .ep-dek{font-size:15.5px;font-weight:300;line-height:1.6;color:var(--ink2);margin-top:11px;max-width:680px}
 .ep-people{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);margin-top:15px}
-.ep-ar{font-size:17px;color:var(--ink3);justify-self:end;align-self:center;transition:transform .25s,color .25s}
-.ep:hover .ep-ar{color:var(--accent);transform:translate(3px,-3px)}
 @media(max-width:680px){
   .ep{grid-template-columns:46px 1fr;gap:0 16px;padding:28px 6px}
-  .ep-ar{display:none}
 }
 
-/* SEARCH */
-.search{margin-bottom:26px}
-.search-box{position:relative;display:flex;align-items:center}
-.search-box::before{content:"";position:absolute;left:17px;width:15px;height:15px;border:1.6px solid var(--ink3);border-radius:50%;pointer-events:none}
-.search-box::after{content:"";position:absolute;left:28px;top:calc(50% + 5px);width:7px;height:1.6px;background:var(--ink3);transform:rotate(45deg);pointer-events:none}
-.search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:4px;color:var(--ink);font-family:var(--sf);font-size:16px;font-weight:300;letter-spacing:.01em;padding:15px 18px 15px 44px;outline:none;transition:border-color .2s,background .2s}
-.search input::placeholder{color:var(--ink3)}
-.search input:focus{border-color:var(--accent);background:var(--panel2)}
-.search-status{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--ink3);margin-top:12px;min-height:15px}
+/* SEARCH RESULTS */
+.search-status{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.16em;color:var(--ink3);min-height:15px}
 mark{background:var(--mark);color:var(--ink);border-radius:2px;padding:0 1px}
 .ep-snip{font-size:13.5px;font-weight:300;line-height:1.65;color:var(--ink3);margin-top:13px;max-width:680px;border-left:2px solid var(--line);padding-left:13px}
 .empty{padding:46px 6px;color:var(--ink3);font-size:15px;font-weight:300;letter-spacing:.01em}
@@ -117,11 +115,10 @@ mark{background:var(--mark);color:var(--ink);border-radius:2px;padding:0 1px}
 
 /* FOOTER */
 footer{border-top:1px solid var(--line);padding:88px 0 70px;text-align:center}
-footer .big{font-size:clamp(23px,3.2vw,36px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:780px;margin:0 auto 34px}
-footer .big b{font-weight:600}
-footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
-footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
-footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:28px auto 0;line-height:1.7;letter-spacing:.01em}
+footer .f-bio{font-size:clamp(14px,1.6vw,17px);font-weight:300;color:var(--ink2);max-width:560px;margin:0 auto;line-height:1.7;letter-spacing:.01em}
+footer .f-quote{position:relative;margin:38px auto 0;padding-top:30px;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);line-height:1.9}
+footer .f-quote::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:1px;background:var(--line)}
+footer .f-cite{display:block;margin-top:9px;font-size:11px;font-weight:400;letter-spacing:.16em;color:var(--ink3);opacity:.66}
 
 /* REVEAL */
 .rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
@@ -129,61 +126,40 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   .rev{opacity:1;transform:none;transition:none}
-  .ep,.ep-ar,.ep-no,.ep-title{transition:none}
+  .ep,.ep-no,.ep-title{transition:none}
 }
-@media(max-width:760px){section{padding:80px 0}.masthead{padding:104px 0 40px}#index{padding-top:40px}}
+@media(max-width:760px){section{padding:80px 0}#index{padding-top:80px}}
 </style>
 </head>
 <body>
 
 <!-- ============ NAV ============ -->
 <nav id="nav"><div class="wrap">
-  <div class="brand">Steve's Notes</div>
+  <a class="brand" href="index.html">Steve's Notes</a>
   <div class="nav-right">
-    <div class="links">
-      <a href="#index">Index</a>
-      <a href="#about">About</a>
+    <div class="nav-search" id="navSearch">
+      <input id="q" class="ns-input" type="search" placeholder="搜尋筆記…" autocomplete="off" spellcheck="false" aria-label="搜尋筆記">
+      <button id="search-toggle" class="icon-btn" type="button" aria-label="搜尋" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      </button>
     </div>
-    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+    <button id="theme-toggle" class="icon-btn theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
     </button>
   </div>
 </div></nav>
 
-<!-- ============ MASTHEAD ============ -->
-<header class="masthead"><div class="wrap rev">
-  <h1 class="mh-title">Steve's Notes</h1>
-  <p class="mh-bio">我聽過、讀過、覺得值得留下來的內容——挑出真正重要的數字、論點與金句，濃縮成一眼讀完的單頁筆記。</p>
-</div></header>
-
 <!-- ============ INDEX ============ -->
 <section id="index"><div class="wrap">
-  <div class="search rev">
-    <div class="search-box">
-      <input id="q" type="search" placeholder="搜尋標題、摘要、人物，或文章內文…" autocomplete="off" spellcheck="false" aria-label="搜尋筆記">
-    </div>
-    <div class="search-status" id="status"></div>
-  </div>
-  <div class="list-head rev"><span class="count num" id="count"></span></div>
+  <div class="list-head rev"><span class="list-label" id="listLabel">All</span><span class="search-status" id="status"></span><span class="count num" id="count"></span></div>
   <div class="idx" id="list"></div>
-</div></section>
-
-<!-- ============ ABOUT ============ -->
-<section id="about"><div class="wrap about rev">
-  <div class="label"><span class="ln"></span>About</div>
-  <p><strong>這裡收錄我聽過、覺得值得留下來的 podcast 重點整理。</strong>原始逐字稿經過篩選與重新編排，保留核心的數字、論點與關鍵引述，目的是把長對話濃縮成可快速回顧的單頁。</p>
-  <p>每一篇都是獨立設計的頁面，會隨主題調整視覺。點任一集即可閱讀完整整理。</p>
 </div></section>
 
 <!-- ============ FOOTER ============ -->
 <footer><div class="wrap rev">
-  <div class="big">把長的變短，<b>把雜的變清楚</b>。</div>
-  <div class="meta">
-    Steve's Notes<br>
-    Maintained by Steve · Built with Claude
-  </div>
-  <p class="disc">各篇為 podcast 內容的重點整理，數字與引述取自各集內容，屬講者觀點與預測，非投資建議。</p>
+  <p class="f-bio">我聽過、讀過、覺得值得留下來的內容。<br>交給 <span class="accent">Claude</span> 濃縮成一眼讀完的單頁筆記。</p>
+  <p class="f-quote">Stay hungry. Stay foolish.<span class="f-cite">Steve Jobs · Stanford 2005</span></p>
 </div></footer>
 
 <script>
@@ -199,6 +175,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 const listEl   = document.getElementById('list');
 const countEl  = document.getElementById('count');
 const statusEl = document.getElementById('status');
+const listLabel = document.getElementById('listLabel');
 const qEl      = document.getElementById('q');
 
 /* ───────────── state ───────────── */
@@ -242,7 +219,6 @@ function card(e, idx, re, snip){
       ${snp}
       <div class="ep-people">${highlight(e.people, re)}</div>
     </div>
-    <div class="ep-ar">↗</div>
   </a>`;
 }
 
@@ -271,11 +247,13 @@ async function loadFullText(){
 async function runSearch(){
   const q = qEl.value.trim();
   if(!q){
+    listLabel.style.display = '';
     countEl.textContent = String(total).padStart(2, '0') + ' 篇';
     statusEl.textContent = fullText ? '' : statusEl.textContent;
     render(allDocs, null, true);
     return;
   }
+  listLabel.style.display = 'none';
   const ft    = await loadFullText();
   const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
   const re    = makeRe(terms);
@@ -333,6 +311,33 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
   try{ if(localStorage.getItem('theme')) return; }catch(_){}
   root.setAttribute('data-theme', e.matches ? 'light' : 'dark');
+});
+
+/* collapsible search: icon → rounded field on click */
+const navSearch = document.getElementById('navSearch');
+const searchToggle = document.getElementById('search-toggle');
+function openSearch(){
+  navSearch.classList.add('open');
+  navEl.classList.add('searching');
+  searchToggle.setAttribute('aria-expanded', 'true');
+  qEl.focus();
+}
+function closeSearch(){
+  navSearch.classList.remove('open');
+  navEl.classList.remove('searching');
+  searchToggle.setAttribute('aria-expanded', 'false');
+  if(qEl.value){ qEl.value = ''; runSearch(); }   // reset the list if a query was active
+  qEl.blur();
+}
+searchToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if(!navSearch.classList.contains('open')) openSearch();
+  else if(qEl.value) qEl.focus();                 // keep an active search open
+  else closeSearch();
+});
+qEl.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeSearch(); });
+document.addEventListener('click', (e) => {       // click outside an empty field closes it
+  if(navSearch.classList.contains('open') && !navSearch.contains(e.target) && !qEl.value) closeSearch();
 });
 
 /* ───────────── init ───────────── */
