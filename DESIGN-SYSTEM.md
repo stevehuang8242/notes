@@ -304,10 +304,10 @@ td.pos{color:var(--pos)} td.neg{color:var(--neg)}
 
 ### 6.10 Bull / Bear、Timeline、Pull-quote、Footer、List、Search
 - **Bull/Bear**：格線牆兩欄（`.bbc.bull` / `.bbc.bear`）。**標題一律中性灰 `.bbc .h{color:var(--ink3)}`**，多空只靠 `▲`／`▼` 區分，語意色僅留在內文 `strong`（不染標題）。
-- **Hero**：**canonical 單一＝靠左 ticker**（`.ticker` badge + meta、細粗混排多行 h1、副標、選填 CTA），`padding:120px 0 40px`。不再用置中 hero。**`.hero` 不要設 `display:flex`**——靠 `.inner.wrap` 當一般 1080 wrap，左緣才會跟內文 section 對齊（flex column + `margin:0 auto` 會讓 inner 縮成內容寬並置中、與內文不齊，是 bug）。h1 強調三選一：`.hl`（`--accent` 藍，一般重點預設）/ `u`（`--pos` 綠，限真有正向語意）/ `.xline`（中性底線）。
+- **Hero**：**canonical 單一＝靠左 ticker**（`.ticker` badge + meta、細粗混排多行 h1、副標、選填 CTA），`padding:120px 0 40px`。不再用置中 hero。**`.hero` 不要設 `display:flex`**——靠 `.inner.wrap` 當一般 1080 wrap，左緣才會跟內文 section 對齊（flex column + `margin:0 auto` 會讓 inner 縮成內容寬並置中、與內文不齊，是 bug）。h1 強調三選一：`.hl`（`--accent` 藍，一般重點預設）/ `u`（`--pos` 綠，限真有正向語意）/ `.xline`（中性底線）。**選填 CTA 僅作頁內跳轉（`#anchor`）；podcast／影片的 YT 來源連結不放 hero（見 Footer）。**
 - **Timeline**：**canonical 單一＝大數字里程碑**（`.tl-row`：左 `.tl-when` 期間 + 右 `.tl-what b` 大字頭條 + `span` 說明）。敘事轉折也用這款（頭條放短句、詳述移到 span），不再用 `.tlr` 引述款。
 - **Pull-quote**：置中、`font-weight:300` 大字、`.who` 署名小 caps。**垂直留白 `padding:60px 0 48px`**——引言常夾在兩段 `.body` 之間，留白太小（如 14px）會和上下文擠在一起、失去「停頓」感；上多下少（署名下方已有 section 留白）。
-- **Footer**：`border-top:1px solid var(--line)`，大字結語 + meta caps + 免責 `--ink3`。
+- **Footer**：`border-top:1px solid var(--line)`，大字結語 + meta caps + 免責 `--ink3`。**來源連結的唯一正規位置**：podcast／影片的 YT 連結放在 `.meta` 內、緊接「來源 · 日期 · 與談人」之後，hero 與內文都不重複放。
 - **首頁清單 `.ep`** 與 **搜尋 `.search` / `mark`**：見 `index.html`，已全 token 化，照搬即可。
 
 ---
