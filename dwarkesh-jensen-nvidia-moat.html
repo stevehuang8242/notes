@@ -285,6 +285,17 @@ td.pos{color:var(--pos)} td.neg{color:var(--neg)} td.hl{color:var(--ink);font-we
   opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease;z-index:80;pointer-events:none;
   box-shadow:0 16px 44px rgba(0,0,0,.45)}
 .gl:hover::after,.gl.open::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+/* 手機：關掉浮層，改用 body 層的置中彈窗（不被 hero overflow / .rev transform 裁切） */
+@media(max-width:760px){.gl::after{display:none}.gl{cursor:pointer}}
+.gl-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;z-index:200}
+.gl-backdrop.open{opacity:1;visibility:visible}
+.gl-pop{position:fixed;left:50%;top:50%;z-index:201;width:min(420px,calc(100vw - 40px));background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 22px;box-shadow:0 24px 60px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translate(-50%,-50%) scale(.94);transition:opacity .2s ease,transform .2s cubic-bezier(.22,1,.36,1),visibility .2s ease;max-height:80vh;overflow-y:auto}
+.gl-pop.open{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+.gl-pop .gh{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.gl-pop .gt{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:.01em;line-height:1.4}
+.gl-pop .gx{flex:none;width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;cursor:pointer}
+.gl-pop .gd{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2);letter-spacing:.01em}
+@media(prefers-reduced-motion:reduce){.gl-pop,.gl-backdrop{transition:none}}
 
 /* ════ RISK GRID（2 欄卡片＋紅點＋強調數字） ════ */
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
@@ -539,14 +550,37 @@ const io=new IntersectionObserver((es)=>{
 },{threshold:.14});
 document.querySelectorAll('.rev').forEach(el=>io.observe(el));
 
-// glossary：手機點擊切換
-document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
-  e.stopPropagation();
-  const open=el.classList.contains('open');
-  document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open'));
-  if(!open)el.classList.add('open');
-}));
-document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+// glossary：桌機 hover 浮層；手機點擊 → body 層置中彈窗（不被裁切）
+(function(){
+  const mob=()=>matchMedia('(max-width:760px)').matches;
+  let pop,backdrop,gt,gd;
+  function build(){
+    backdrop=document.createElement('div');backdrop.className='gl-backdrop';
+    pop=document.createElement('div');pop.className='gl-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-modal','true');
+    pop.innerHTML='<div class="gh"><div class="gt"></div><button class="gx" type="button" aria-label="關閉">✕</button></div><div class="gd"></div>';
+    gt=pop.querySelector('.gt');gd=pop.querySelector('.gd');
+    document.body.appendChild(backdrop);document.body.appendChild(pop);
+    backdrop.addEventListener('click',close);
+    pop.querySelector('.gx').addEventListener('click',close);
+  }
+  function open(term,def){
+    if(!pop)build();
+    gt.textContent=term;gd.textContent=def;
+    backdrop.classList.add('open');
+    void pop.offsetHeight;
+    pop.classList.add('open');
+  }
+  function close(){if(pop){pop.classList.remove('open');backdrop.classList.remove('open')}}
+  document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(mob()){open(el.textContent.trim(),el.getAttribute('data-d')||'');return}
+    const o=el.classList.contains('open');
+    document.querySelectorAll('.gl.open').forEach(x=>x.classList.remove('open'));
+    if(!o)el.classList.add('open');
+  }));
+  document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+})();
 
 // theme toggle（初始主題由 <head> inline script 設定，避免 FOUC）
 const root=document.documentElement;
