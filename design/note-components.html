@@ -126,6 +126,14 @@ nav .links a:hover{color:var(--ink)}
 .hero .sub b{color:var(--ink);font-weight:500}
 .hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
 .hero .cta{margin-top:40px;display:flex;gap:18px;flex-wrap:wrap}
+/* 主線預告（hero 尾段）：lead 標 + 編號 chips，預告骨幹、兼作頁內錨點；取代純跳轉 CTA。nav 仍是完整 TOC。 */
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
 
 /* ════════ SECTION · label · 文字 ════════ */
 section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
@@ -415,7 +423,7 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
 <section class="cat" id="hero"><div class="wrap">
   <div class="cat-head"><div class="label"><span class="n">01</span> Hero</div>
   <h2>靠左 <span class="thin">ticker 開場</span></h2>
-  <p class="cat-note">全站單一 hero：靠左，代號標籤（<code>.ticker</code> 內 <code>.tk</code> badge + <code>.mt</code> meta）+ 細粗混排多行標題 + 副標 +（選填）CTA。標題強調三選一：<code>.hl</code> 藍色（<code>--accent</code>，一般重點預設用這個）、<code>&lt;u&gt;</code> 綠色（<code>--pos</code>，限真有正向語意如「現金引擎」）、<code>.xline</code> 中性底線；再加 <code>.thin</code> 做細粗反差。副標可內嵌 <code>&lt;b&gt;</code>／<code>.c</code>／<code>.b</code>。分析型常接 Metric Strip，敘事型常接 CTA。<strong>CTA 僅作頁內跳轉（<code>#anchor</code>）；podcast／影片的 YT 來源連結不放 hero，一律收在 footer <code>.meta</code>（見 19 · Footer）。</strong></p>
+  <p class="cat-note">全站單一 hero：靠左，代號標籤（<code>.ticker</code> 內 <code>.tk</code> badge + <code>.mt</code> meta）+ 細粗混排多行標題 + 副標 +（選填）主線預告 <code>.spine</code>。標題強調三選一：<code>.hl</code> 藍色（<code>--accent</code>，一般重點預設用這個）、<code>&lt;u&gt;</code> 綠色（<code>--pos</code>，限真有正向語意如「現金引擎」）、<code>.xline</code> 中性底線；再加 <code>.thin</code> 做細粗反差。副標可內嵌 <code>&lt;b&gt;</code>／<code>.c</code>／<code>.b</code>。<strong>hero 尾段（敘事型）放主線預告 <code>.spine</code>：lead 標 <code>.sk</code> + 2–4 個編號 chip <code>.si</code>（內含 <code>.sn</code> 編號），用本頁自己的話預告骨幹，每個 chip 兼作頁內錨點、各自跳到<em>不同</em> section。chip 文案要帶實質、別照抄 nav 的詞——它的職責是「預告實質」，nav 才是完整 TOC。spine 可用於任何頁（含分析型）——與 hero 下方的 Metric Strip section 並用 OK（spine 預告骨幹、strip 預告數字），但別把 spine 疊在 <em>hero 內</em>的 strip 上（過載）。舊的純跳轉 <code>.cta</code>／<code>.btn</code> 會跟 nav 重複，已退役。</strong> podcast／影片的 YT 來源連結不放 hero，一律收在 footer <code>.meta</code>（見 19 · Footer）。</p>
 
   <div style="border:1px solid var(--hair);border-radius:6px;overflow:hidden;margin-top:6px;padding:0 30px">
     <div class="hero" style="padding:70px 0 50px"><div class="inner">
@@ -425,9 +433,11 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
       </div>
       <h1>當主標題、<span class="hl">藍色重點</span><br><span class="thin">細體第二行 <span class="xline">底線</span></span></h1>
       <p class="sub">副標可內嵌 <b>強調</b>、<span class="c">正向</span>、<span class="b">負向</span>三種行內標記。</p>
-      <div class="cta">
-        <a class="btn" href="#">核心論點 <span class="ar">↓</span></a>
-        <a class="btn ghost" href="#">看財務 <span class="ar">↓</span></a>
+      <div class="spine">
+        <span class="sk">三大主線</span>
+        <a class="si" href="#"><span class="sn">01</span> 第一條主線</a>
+        <a class="si" href="#"><span class="sn">02</span> 第二條主線</a>
+        <a class="si" href="#"><span class="sn">03</span> 第三條主線</a>
       </div>
     </div></div>
   </div>

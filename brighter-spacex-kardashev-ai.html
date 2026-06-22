@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>把 AI 資料中心搬上太空 — Elon × SpaceX AI 重點整理</title>
+<!-- 首頁列表中繼資料（build-index.js 讀取，產生 notes.json）。新增筆記時請一併填寫。 -->
+<meta name="note:src" content="Brighter w/ Herbert">
+<meta name="note:date" content="2026.06.09">
+<meta name="note:title" content="把 AI 資料中心搬上太空，爬 Kardashev 量表">
+<meta name="note:dek" content="SpaceX 要把 AI 資料中心送上軌道：Starship 入軌、太空太陽能、Terafab 晶片，終點是月球質量投射器。">
+<meta name="note:people" content="Elon Musk · Ian Doll · Herbert Ong">
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════ TOKENS — Canonical superset（每個 note 檔複製同一份，見 DESIGN-SYSTEM.md §2） ════ */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --track:rgba(255,255,255,.06);
+  --accent:#9db7d8;                 /* cold steel：連結/編號/focus */
+  --mark:rgba(157,183,216,.28);     /* 搜尋高亮 */
+  --pos:#37d6ad;                    /* 正向 / cash engine / bull */
+  --neg:#ff5a4d;                    /* 負向 / burn / bear */
+  /* data-viz：accent 同色濃淡 ramp（最強→最弱） */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
+  --gl-bg:#15161b;                  /* glossary tooltip 面 */
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+  --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+
+/* ── base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.up{text-transform:uppercase;letter-spacing:.22em}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* ════ NAV + theme toggle（全站 chrome，54px 毛玻璃） ════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:30px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* ════ buttons ════ */
+.btn{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.2em;padding:13px 26px;border:1px solid var(--line);border-radius:2px;color:var(--ink);
+  transition:background .25s,color .25s,border-color .25s}
+.btn:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.ghost{border-color:transparent;padding-left:0;padding-right:0}
+.btn.ghost:hover{background:transparent;color:var(--ink2)}
+.btn .ar{font-size:14px}
+
+/* ════ HERO（canonical 單一：靠左 ticker） ════ */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none}
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 .hl{color:var(--accent)}                /* 裝飾性強調（藍）— 一般 hero 重點預設用這個 */
+.hero h1 u{text-decoration:none;color:var(--pos)} /* 語意正向（綠）— 只在真有正向含義時 */
+.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--ink);padding-bottom:2px;line-height:1} /* 中性底線強調 */
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+.hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+.hero .cta{margin-top:40px;display:flex;gap:18px;flex-wrap:wrap}
+/* 主線預告（hero 尾段）：lead 標 + 編號 chips，預告骨幹、兼作頁內錨點；取代純跳轉 CTA。nav 仍是完整 TOC。 */
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
+
+/* ════ SECTION · label · 文字 ════ */
+section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em} /* canonical：編號框 */
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em;margin-bottom:20px}
+h2 .thin{font-weight:300}
+.lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:760px}
+p.body{font-size:18px;font-weight:300;line-height:1.7;color:var(--ink2);max-width:760px;margin-top:26px}
+p.body strong{color:var(--ink);font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  border:1px solid var(--line);border-radius:2px;padding:2px 9px;margin:0 3px;vertical-align:2px;color:var(--ink)}
+.who{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);margin-top:30px}
+
+/* ════ THESIS / PULL-QUOTE ════ */
+.pull{padding:60px 0 48px;text-align:center}
+.pull .q{font-size:clamp(24px,3.6vw,40px);font-weight:300;line-height:1.34;letter-spacing:.005em;max-width:920px;margin:0 auto}
+.pull .q b{font-weight:600}
+.pull .who{margin-top:30px}
+
+/* ════ BIG NUMBERS（4 欄） ════ */
+.bignums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:20px;border-top:1px solid var(--line)}
+.bignum{padding:38px 26px 34px;border-right:1px solid var(--hair)}
+.bignum:last-child{border-right:none}
+.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bignum .v small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:.02em}
+.bignum .l{font-size:14px;font-weight:300;color:var(--ink2);margin-top:18px;line-height:1.5}
+@media(max-width:760px){.bignums{grid-template-columns:1fr 1fr}.bignum{border-bottom:1px solid var(--hair)}.bignum:nth-child(2){border-right:none}}
+
+/* ════ METRIC STRIP（6 欄格線牆） ════ */
+.strip{margin-top:30px;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cell{background:var(--surface);padding:20px 18px}
+.cell .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cell .v{font-size:26px;font-weight:500;margin-top:10px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .n{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.4}
+@media(max-width:760px){.strip{grid-template-columns:repeat(2,1fr)}}
+
+/* ════ BENTO 卡片牆（3 欄） ════ */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.card{background:var(--surface);padding:40px 34px}
+.card .ico{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);display:block;margin-bottom:22px}
+.card h3{font-size:23px;font-weight:600;letter-spacing:.01em;margin-bottom:14px}
+.card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.card p b{color:var(--ink);font-weight:500}
+@media(max-width:760px){.bento{grid-template-columns:1fr}}
+
+/* ════ 註腳（圖表 / 數字下方口徑） ════ */
+.cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}
+
+/* ════ CALLOUT / 引述框（中性 / 正 / 負） ════ */
+.callout{border:1px solid var(--line);border-left:3px solid var(--ink);padding:24px 26px;margin-top:30px}
+.callout.c{border-left-color:var(--pos)} .callout.b{border-left-color:var(--neg)}
+.callout p{font-size:17px;font-weight:300;line-height:1.65;color:var(--ink2)}
+.callout p strong{color:var(--ink);font-weight:500}
+
+/* ════ GLOSSARY tooltip（虛線詞＋hover 浮層） ════ */
+.gl{border-bottom:1px dotted var(--line);cursor:help;position:relative}
+.gl::after{content:attr(data-d);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(5px);
+  width:max-content;max-width:min(330px,82vw);background:var(--gl-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;font-family:var(--sf);font-size:13.5px;font-weight:300;line-height:1.6;letter-spacing:.01em;
+  color:var(--ink2);text-transform:none;text-align:left;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease;z-index:80;pointer-events:none;
+  box-shadow:0 16px 44px rgba(0,0,0,.45)}
+.gl:hover::after,.gl.open::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+
+/* ════ TIMELINE（canonical 單一：大數字里程碑） ════ */
+.tl{margin-top:30px;border-top:1px solid var(--line)}
+.tl-row{display:grid;grid-template-columns:180px 1fr;gap:30px;padding:30px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.tl-when{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2)}
+.tl-what b{font-size:44px;font-weight:500;letter-spacing:.005em;margin-right:18px;font-variant-numeric:tabular-nums}
+.tl-what span{font-size:16px;font-weight:300;color:var(--ink2)}
+@media(max-width:760px){.tl-row{grid-template-columns:110px 1fr;gap:16px}}
+
+/* ════ FOOTER（結語＋meta＋免責） ════ */
+footer{border-top:1px solid var(--line);padding:80px 0 70px;text-align:center}
+footer .big{font-size:clamp(24px,3.4vw,38px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:820px;margin:0 auto 36px}
+footer .big b{font-weight:600}
+footer .big small{display:block;font-size:.5em;color:var(--ink3);margin-top:18px;font-weight:300}
+footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
+footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
+footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:30px auto 0;line-height:1.7}
+
+/* ════ 動效 ════ */
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev,.fill,.sg,.bar-fill,.b,.split>div{transition:none!important;opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">太空 AI</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#why">為什麼</a>
+      <a href="#limits">三瓶頸</a>
+      <a href="#satellite">AI 衛星</a>
+      <a href="#timeline">時間表</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- ════ HERO ════ -->
+<header class="hero"><div class="inner wrap">
+  <div class="ticker">
+    <span class="tk">BRIGHTER W/ HERBERT</span>
+    <span class="mt">影片 · 2026.06.09 · YouTube</span>
+  </div>
+  <h1>我們在 Kardashev 量表上<br><span class="hl">還不存在</span><br><span class="thin">於是要把 AI 資料中心搬上<span class="xline">軌道</span></span></h1>
+  <p class="sub">Elon 與 Starlink 團隊的 Ian Doll 拆解 SpaceX 的太空 AI 藍圖：先突破 <b>入軌質量、太空太陽能、AI 晶片</b> 三大瓶頸，再用月球質量投射器，把文明推向 Kardashev Type 2。</p>
+  <div class="spine">
+    <span class="sk">三大瓶頸</span>
+    <a class="si" href="#starship"><span class="sn">01</span> 入軌質量</a>
+    <a class="si" href="#satellite"><span class="sn">02</span> 太空太陽能</a>
+    <a class="si" href="#terafab"><span class="sn">03</span> AI 晶片</a>
+  </div>
+</div></header>
+
+<!-- ════ 00 · WHY ════ -->
+<section id="why"><div class="wrap rev">
+  <div class="label"><span class="n">00</span> The Why · Kardashev 量表</div>
+  <h2>用「<span class="thin">駕馭多少能量</span>」衡量文明</h2>
+  <p class="lede">一個文明走到哪了？最客觀的指標，是它能駕馭多少能量。蘇聯物理學家 Kardashev 把它分成三級——而人類，連邊都還沒沾上。</p>
+  <p class="body"><span class="gl" data-d="由蘇聯天文學家 Nikolai Kardashev 提出，用一個文明能駕馭多少能量來分級：Type 1 駕馭整顆行星、Type 2 整顆恆星、Type 3 整個星系的能量。">Kardashev 量表</span> 把文明分三級：<strong>Type 1</strong> 駕馭整顆行星的能量、<strong>Type 2</strong> 駕馭整顆恆星、<strong>Type 3</strong> 駕馭整個星系。Elon 說，從 Type 1 跳到 Type 2 是「非常大的難度躍升」，而 Type 3「我們根本還不知道怎麼做」。</p>
+  <p class="body">太陽大到難以用言語形容：它佔了整個太陽系質量的 <strong>99.86%</strong>，剩下的 0.14% 大半是木星，<strong>整顆地球只是一粒灰塵</strong>。而人類現在駕馭的太陽能量，<strong>遠不到兆分之一</strong>——用 Elon 的話說，在 Kardashev 2 量表上，我們「根本還沒登記上去」。</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">99.86%</div><div class="l">太陽佔太陽系全部質量——地球只是一粒灰塵</div></div>
+    <div class="bignum"><div class="v num">70%</div><div class="l">地球表面是水，可發電的陸地其實很小</div></div>
+    <div class="bignum"><div class="v num">百萬分之一</div><div class="l">Elon 設定的起步目標：駕馭太陽輸出的這個比例</div></div>
+    <div class="bignum"><div class="v num">&lt;兆分之一</div><div class="l">但我們現在連這個都遠遠不到</div></div>
+  </div>
+  <p class="cap">口徑：太陽佔太陽系質量 99.86%；落在地球橫截面的太陽能僅約太陽總輸出的二十億分之一，且 70% 是水、不少陸地又在極地，可用面積更小。一兆＝一百萬乘以一百萬。數字均出自本集對談。</p>
+  <div class="pull">
+    <div class="q">要往上爬 Kardashev 量表、要駕馭任何有意義比例的太陽能量，<b>你就得上太空。</b></div>
+    <div class="who">Elon Musk</div>
+  </div>
+</div></section>
+
+<!-- ════ 01 · LIMITS ════ -->
+<section id="limits"><div class="wrap rev">
+  <div class="label"><span class="n">01</span> 規模化的瓶頸</div>
+  <h2>三個必須突破的<span class="thin">限制因素</span></h2>
+  <p class="lede">把資料中心搬上太空，Elon 拆成三件硬事。三者缺一不可——而它們傳統上會讓這件事「幾乎不可能」。</p>
+  <div class="bento">
+    <div class="card"><span class="ico">01 · Mass to Orbit</span><h3>入軌質量</h3><p>最終要把 <b>數百萬噸</b> 送上軌道甚至更遠。這是 <b>Starship</b> 要解決的瓶頸。</p></div>
+    <div class="card"><span class="ico">02 · Solar + Heat</span><h3>太空太陽能</h3><p>最終要 <b>1 TW</b> 太陽能。散熱在太空反而容易——直接向真空輻射就好。</p></div>
+    <div class="card"><span class="ico">03 · Chips</span><h3>AI 晶片</h3><p>最終要 <b>1 TW</b> 算力。先發射現成晶片，再靠巨型晶片廠 <b>Terafab</b> 量產。</p></div>
+  </div>
+</div></section>
+
+<!-- ════ 02 · STARSHIP ════ -->
+<section id="starship"><div class="wrap rev">
+  <div class="label"><span class="n">02</span> 瓶頸一 · 入軌質量</div>
+  <h2>Starship：<span class="thin">完全且快速可重複使用</span></h2>
+  <p class="body">可重複使用是 Elon 口中「根本的突破」。火箭比飛機難回收——地球重力井深、大氣層厚；為了把每一克重量都省下來，SpaceX 選擇用<strong>發射塔直接夾住</strong>火箭，而不是裝沉重的著陸腳架。目標還不只是回收，而是<strong>像飛機一樣</strong>：落地、被塔夾住、放回發射台，免整備、免繁瑣檢查就能再飛。</p>
+  <div class="pull">
+    <div class="q">如果我們每飛一次就把飛機丟掉，搭飛機會貴到誇張，<b>基本上不會有人搭飛機。</b></div>
+    <div class="who">Elon Musk · 論可重複使用</div>
+  </div>
+  <div class="strip">
+    <div class="cell"><div class="k">V3 推力</div><div class="v num">&gt;2×</div><div class="n">Saturn V 登月火箭</div></div>
+    <div class="cell"><div class="k">V4 推力</div><div class="v num">~3×</div><div class="n">Saturn V（預計）</div></div>
+    <div class="cell"><div class="k">Falcon 入軌佔比</div><div class="v num">85–90%</div><div class="n">全球入軌質量</div></div>
+    <div class="cell"><div class="k">現在入軌</div><div class="v num">2,500噸</div><div class="n">每年</div></div>
+    <div class="cell"><div class="k">目標入軌</div><div class="v num">百萬噸</div><div class="n">約 3 年內 · 每年</div></div>
+    <div class="cell"><div class="k">飛行頻率</div><div class="v num">&gt;1次/時</div><div class="n">終極目標</div></div>
+  </div>
+  <p class="cap">口徑：V3／V4 推力相對 Saturn V 登月火箭；Falcon 9／Heavy 目前已包辦全球約 85–90% 入軌質量，其餘多由中國發射。第 12 次飛行是 SpaceX 飛過最重的酬載，而那「還只是 V3 能力的一小部分」。</p>
+</div></section>
+
+<!-- ════ 03 · SATELLITE ════ -->
+<section id="satellite"><div class="wrap rev">
+  <div class="label"><span class="n">03</span> 瓶頸二 · 太空太陽能</div>
+  <h2>AI 衛星：<span class="thin">比 Starlink 衛星還簡單</span></h2>
+  <p class="body">資料中心真正要送上太空的核心元件其實很小；難的是<strong>供電</strong>與<strong>散熱</strong>。一顆 AI 衛星說穿了就是<strong>一大片太陽能板 + 一個<span class="gl" data-d="太空沒有空氣可對流散熱，廢熱只能以紅外線輻射方式排向真空。輻射器就是負責把熱甩進太空的大片散熱面板。">輻射器</span> + 幾條雷射鏈路</strong>——少了 Starlink 衛星那些複雜的相位陣列天線，反而更好設計，只是<strong>做得更大</strong>。</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">150<small>kW</small></div><div class="l">峰值功率 ≈ 一台 Nvidia GB300 機櫃</div></div>
+    <div class="bignum"><div class="v num">120<small>kW</small></div><div class="l">持續算力功率</div></div>
+    <div class="bignum"><div class="v num">~70<small>m</small></div><div class="l">太陽能板＋輻射器翼展</div></div>
+    <div class="bignum"><div class="v num">~3<small>ms</small></div><div class="l">600–800 km 軌道的延遲</div></div>
+  </div>
+  <p class="cap">假設：太陽能板 250 W/m²、輻射器 1,400 W/m²（雙面散熱、刀刃朝向太陽）。150 kW 峰值 ≈ 一台 Nvidia GB300 機櫃（72 顆 GPU、峰值約 140 kW）。衛星經約 1 Tbps 雷射鏈路連上 Starlink 星系，再由既有 KA／KU 天線把資料送回地面。</p>
+  <p class="body">技術不是憑空變出來的：這些太陽能直接沿用即將上線的 <strong>Starlink V3</strong> 衛星，「沒有什麼還不存在的魔法」。目前軌道上已有約 <strong>1 萬顆</strong> Starlink，SpaceX 是唯一有這種規模經驗的營運者；未來 AI 衛星上看<strong>數千顆、甚至一百萬顆</strong>——「太空真的很大」，不太會塞車。</p>
+  <div class="callout">
+    <p><strong>延遲迷思：</strong>很多人以為太空資料中心會很慢。其實軌道只在地表上方 600–800 公里，光每毫秒走 300 公里——往返不過約 3 毫秒。「光速跑得挺快的。」</p>
+  </div>
+</div></section>
+
+<!-- ════ 04 · TERAFAB ════ -->
+<section id="terafab"><div class="wrap rev">
+  <div class="label"><span class="n">04</span> 瓶頸三 · 晶片</div>
+  <h2>晶片瓶頸與 <span class="thin">Terafab</span></h2>
+  <p class="body">一開始可以直接發射現成晶片——參考設計用 Nvidia <strong>Rubin</strong>、<strong>GB300</strong>，之後還會有 <strong>TPU</strong> 版本，幾乎任何現有晶片都能送上軌道。但整個產業大概只會走到每年約 <strong>100 GW</strong> AI 算力，這回答不了「怎麼到 1 TW」。答案是一座巨型晶片廠：<strong>Terafab</strong>。</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">1<small>TW</small></div><div class="l">Terafab 目標年產晶片（＝ 1,000 GW）</div></div>
+    <div class="bignum"><div class="v num">10<small>×</small></div><div class="l">比 Tesla 德州 Gigafactory 還大</div></div>
+    <div class="bignum"><div class="v num">10<small>億顆</small></div><div class="l">滿版 reticle 晶片／年，每顆 1 kW</div></div>
+    <div class="bignum"><div class="v num">~100<small>GW</small></div><div class="l">對比：全產業目前 AI 算力上限／年</div></div>
+  </div>
+  <p class="cap">Terafab 規模約 1 億平方英尺。Elon 說即使沒有任何技術突破，光把現有製程「硬擴規模」就能做到每年 1 TW 晶片產出——相當於每年 <span class="gl" data-d="reticle 是光刻機一次曝光的最大圖案範圍；「滿版 reticle 晶片」指用滿整個曝光視窗的最大單一晶片。">10 億顆滿版 reticle 晶片</span>、每顆 1 kW，再加上大量記憶體。</p>
+</div></section>
+
+<!-- ════ 05 · TIMELINE ════ -->
+<section id="timeline"><div class="wrap rev">
+  <div class="label"><span class="n">05</span> 時間表</div>
+  <h2>每年，<span class="thin">提升一個數量級</span></h2>
+  <div class="callout">
+    <p><strong>「這是最佳猜測，不是承諾。」</strong>Elon 特別強調這份時間表要帶點保留——是他們打算去試、也覺得大概做得到的事，不是保證。</p>
+  </div>
+  <div class="tl">
+    <div class="tl-row"><div class="tl-when">明年底</div><div class="tl-what"><b class="num">1 GW</b><span>年化太空 AI 算力起步</span></div></div>
+    <div class="tl-row"><div class="tl-when">約 2.5 年</div><div class="tl-what"><b class="num">10 GW</b><span>提升一個數量級</span></div></div>
+    <div class="tl-row"><div class="tl-when">約 3.5 年</div><div class="tl-what"><b class="num">100 GW</b><span>再提升一個數量級</span></div></div>
+    <div class="tl-row"><div class="tl-when">再之後</div><div class="tl-what"><b class="num">1 TW</b><span>＝ 1,000 GW，等於美國目前用電量的兩倍</span></div></div>
+  </div>
+</div></section>
+
+<!-- ════ 06 · MOON ════ -->
+<section id="moon"><div class="wrap rev">
+  <div class="label"><span class="n">06</span> 下一步 · Kardashev II</div>
+  <h2>月球<span class="thin">質量投射器</span></h2>
+  <p class="body">1 TW 聽起來很多，但 Elon 說「其實很小」。要再往上三個數量級、做到 <strong>1,000 倍</strong>，他目前能看到的唯一路徑是<strong>月球</strong>：在當地生產太陽能板與<span class="gl" data-d="太空沒有空氣可對流散熱，廢熱只能以紅外線輻射方式排向真空。輻射器就是負責把熱甩進太空的大片散熱面板。">輻射器</span>（晶片從地球運過去，或乾脆在月球製造）。因為月球<strong>沒有大氣、重力只有地球的 1/6</strong>，可以用<span class="gl" data-d="Mass driver：以電磁加速（本質是線性電動馬達／軌道砲）把酬載沿軌道推到極高速度後拋射，不需化學火箭。月球無大氣、低重力，特別適合。">質量投射器</span>——本質是一具線性電動馬達——不靠火箭，直接把 AI 衛星射進深太空。</p>
+  <div class="pull">
+    <div class="q">何必停在那？為什麼要想小？<b>因為 1 TW 其實很小。</b></div>
+    <div class="who">Elon Musk</div>
+  </div>
+  <p class="body">附帶效果：一旦能把這麼多質量送上月球，<strong>任何想去月球的人都能去</strong>。Elon 說，他覺得每個人這輩子至少都該去月球一次——想的話，甚至可以搬過去住。</p>
+</div></section>
+
+<!-- ════ FOOTER ════ -->
+<footer><div class="wrap rev">
+  <div class="big">「如果這都沒讓你對未來感到興奮，我真不知道還有什麼能了。」<small>一場關於把文明推上 Kardashev 量表的對談。</small></div>
+  <div class="meta">
+    Brighter with Herbert · 2026.06.09<br>
+    Elon Musk · Ian Doll · Herbert Ong<br>
+    <a href="https://www.youtube.com/watch?v=D_1j5dVWNYI" target="_blank" rel="noopener">youtube.com/watch?v=D_1j5dVWNYI</a> · HerbertOng.com
+  </div>
+  <p class="disc">本頁為影片對談的重點整理，數字與引述取自該集內容，屬講者觀點與預測（Elon 強調時間表為「最佳猜測，非承諾」），非投資建議。圖表為示意比例，用於傳達量級關係。</p>
+</div></footer>
+
+<script>
+/* ── 全站標準 JS（每個 note 檔頁尾都複製這段） ── */
+// nav 捲動加底線
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+
+// 進場 reveal + 圖表生長（涵蓋所有資料元件的 data-* 觸發）
+function grow(el){
+  el.querySelectorAll('.bar-fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.sg[data-w]').forEach(b=>b.style.width=(parseFloat(b.dataset.w)/2)+'%'); // 零軸發散：半幅
+  el.querySelectorAll('.b[data-h]').forEach(b=>b.style.height=b.dataset.h+'%');
+  el.querySelectorAll('.split>div[data-flex]').forEach(s=>s.style.flex=s.dataset.flex);
+}
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(!e.isIntersecting)return;
+    e.target.classList.add('in'); grow(e.target); io.unobserve(e.target); });
+},{threshold:.14});
+document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+
+// glossary：手機點擊切換
+document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
+  e.stopPropagation();
+  const open=el.classList.contains('open');
+  document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open'));
+  if(!open)el.classList.add('open');
+}));
+document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+
+// theme toggle（初始主題由 <head> inline script 設定，避免 FOUC）
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>

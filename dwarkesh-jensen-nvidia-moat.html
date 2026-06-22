@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黃仁勳：Nvidia 的護城河會持續嗎？— Dwarkesh Patel Podcast 重點整理</title>
+<!-- 首頁列表中繼資料（build-index.js 讀取，產生 notes.json）。新增筆記時請一併填寫。 -->
+<meta name="note:src" content="Dwarkesh Pod">
+<meta name="note:date" content="2026.04.16">
+<meta name="note:title" content="黃仁勳：Nvidia 的護城河會持續嗎？">
+<meta name="note:dek" content="電子變 token、CUDA 飛輪、為何不自建雲——以及一場關於賣 AI 晶片給中國的硬碰硬長辯。">
+<meta name="note:people" content="Jensen Huang · Dwarkesh Patel">
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════ TOKENS — Canonical superset（每個 note 檔複製同一份，見 DESIGN-SYSTEM.md §2） ════ */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --track:rgba(255,255,255,.06);
+  --accent:#9db7d8;                 /* cold steel：連結/編號/focus */
+  --mark:rgba(157,183,216,.28);     /* 搜尋高亮 */
+  --pos:#37d6ad;                    /* 正向 / cash engine / bull */
+  --neg:#ff5a4d;                    /* 負向 / burn / bear */
+  /* data-viz：accent 同色濃淡 ramp（最強→最弱） */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
+  --gl-bg:#15161b;                  /* glossary tooltip 面 */
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+  --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+
+/* ── base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.up{text-transform:uppercase;letter-spacing:.22em}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* ════ NAV + theme toggle（全站 chrome，54px 毛玻璃） ════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:30px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* ════ buttons ════ */
+.btn{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.2em;padding:13px 26px;border:1px solid var(--line);border-radius:2px;color:var(--ink);
+  transition:background .25s,color .25s,border-color .25s}
+.btn:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.ghost{border-color:transparent;padding-left:0;padding-right:0}
+.btn.ghost:hover{background:transparent;color:var(--ink2)}
+.btn .ar{font-size:14px}
+
+/* ════ HERO（canonical 單一：靠左 ticker） ════ */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none}
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 .hl{color:var(--accent)}                /* 裝飾性強調（藍）— 一般 hero 重點預設用這個 */
+.hero h1 u{text-decoration:none;color:var(--pos)} /* 語意正向（綠）— 只在真有正向含義時 */
+.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--ink);padding-bottom:2px;line-height:1} /* 中性底線強調 */
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+.hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+.hero .cta{margin-top:40px;display:flex;gap:18px;flex-wrap:wrap}
+/* 主線預告（hero 尾段）：lead 標 + 編號 chips，預告骨幹、兼作頁內錨點；取代純跳轉 CTA。nav 仍是完整 TOC。 */
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
+
+/* ════ SECTION · label · 文字 ════ */
+section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em} /* canonical：編號框 */
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em;margin-bottom:20px}
+h2 .thin{font-weight:300}
+.lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:760px}
+p.body{font-size:18px;font-weight:300;line-height:1.7;color:var(--ink2);max-width:760px;margin-top:26px}
+p.body strong{color:var(--ink);font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  border:1px solid var(--line);border-radius:2px;padding:2px 9px;margin:0 3px;vertical-align:2px;color:var(--ink)}
+.who{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);margin-top:30px}
+
+/* ════ THESIS / PULL-QUOTE ════ */
+.pull{padding:60px 0 48px;text-align:center}
+.pull .q{font-size:clamp(24px,3.6vw,40px);font-weight:300;line-height:1.34;letter-spacing:.005em;max-width:920px;margin:0 auto}
+.pull .q b{font-weight:600}
+.pull .who{margin-top:30px}
+
+/* ════ BIG NUMBERS（4 欄） ════ */
+.bignums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:20px;border-top:1px solid var(--line)}
+.bignum{padding:38px 26px 34px;border-right:1px solid var(--hair)}
+.bignum:last-child{border-right:none}
+.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bignum .v small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:.02em}
+.bignum .l{font-size:14px;font-weight:300;color:var(--ink2);margin-top:18px;line-height:1.5}
+@media(max-width:760px){.bignums{grid-template-columns:1fr 1fr}.bignum{border-bottom:1px solid var(--hair)}.bignum:nth-child(2){border-right:none}}
+
+/* ════ METRIC STRIP（6 欄格線牆） ════ */
+.strip{margin-top:30px;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cell{background:var(--surface);padding:20px 18px}
+.cell .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cell .v{font-size:26px;font-weight:500;margin-top:10px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .n{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.4}
+@media(max-width:760px){.strip{grid-template-columns:repeat(2,1fr)}}
+
+/* ════ BENTO 卡片牆（3 / 2 欄）+ stat 變體 ════ */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bento2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.card{background:var(--surface);padding:40px 34px}
+.card .ico{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);display:block;margin-bottom:22px}
+.card h3{font-size:23px;font-weight:600;letter-spacing:.01em;margin-bottom:14px}
+.card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.card p b{color:var(--ink);font-weight:500}
+.card .stat{font-size:50px;font-weight:500;line-height:1;letter-spacing:.005em;margin-bottom:20px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.bento,.bento2{grid-template-columns:1fr}}
+
+/* ════ ENGINE 卡片（標題色＋年序 mini bar＋零軸發散） ════ */
+.engines{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.ecard{background:var(--surface);padding:32px 28px}
+.ecard .et{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3)}
+.ecard h3{font-size:23px;font-weight:600;margin:10px 0 4px}
+.ecard.cn h3{color:var(--pos)} .ecard.bn h3{color:var(--neg)}      /* cn=cash正向 / bn=burn負向 */
+.ecard .role{font-size:14px;font-weight:300;color:var(--ink2);line-height:1.6;min-height:74px}
+.mini{margin-top:22px}
+.mini .h{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:11px}
+.row{display:grid;grid-template-columns:30px 1fr 64px;align-items:center;gap:10px;margin:7px 0;font-size:12px}
+.row .yr{color:var(--ink3);font-variant-numeric:tabular-nums}
+.track{height:8px;background:var(--track);border-radius:4px;overflow:hidden}
+.fill{height:100%;width:0;border-radius:4px;transition:width 1.2s cubic-bezier(.25,1,.4,1);background:var(--ink)}
+.cn .fill{background:var(--pos)}
+.row .v{text-align:right;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink)}
+.row .v.pos{color:var(--pos)} .row .v.neg{color:var(--neg)}
+.dv{position:relative;height:8px;background:var(--track);border-radius:4px}     /* diverging：零軸左右發散 */
+.dv .ax{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.dv .sg{position:absolute;top:0;height:100%;width:0;border-radius:4px;transition:width 1.2s cubic-bezier(.25,1,.4,1)}
+.dv .sg.p{left:50%;background:var(--pos)} .dv .sg.n{right:50%;background:var(--neg)}
+@media(max-width:760px){.engines{grid-template-columns:1fr}}
+
+/* ════ 橫條圖 / 進度條（含標題＋註腳） ════ */
+.chart{border:1px solid var(--line);margin-top:30px;padding:42px 42px 36px}
+.chart .ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--ink3);margin-bottom:8px}
+.chart .cs{font-size:23px;font-weight:500;letter-spacing:.01em;margin-bottom:38px}
+.bars{display:flex;flex-direction:column;gap:1px;background:var(--hair)}
+.bar-row{display:grid;grid-template-columns:160px 1fr;align-items:stretch;background:var(--surface)}
+.bar-lab{font-size:13px;font-weight:300;color:var(--ink2);display:flex;flex-direction:column;justify-content:center;
+  align-items:flex-end;text-align:right;padding:0 22px 0 0;letter-spacing:.02em}
+.bar-lab b{color:var(--ink);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;margin-bottom:3px}
+.bar-track{position:relative;height:48px;background:var(--track);overflow:hidden}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;transition:width 1.3s cubic-bezier(.25,1,.4,1);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
+.bar-fill .v{font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
+.bf-1 .v{color:var(--bar-1-ink)} .bf-2 .v{color:var(--bar-2-ink)} .bf-3 .v{color:var(--bar-3-ink)}   /* §2 每階自帶反白字色 */
+.bar-fill.out{overflow:visible;padding-right:0}                  /* 窄條：標籤外置，避免被 track 的 overflow:hidden 裁掉 */
+.bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
+.cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}
+@media(max-width:760px){.chart{padding:28px 22px}.bar-row{grid-template-columns:108px 1fr}.bar-lab{padding-right:14px}}
+
+/* ════ SPLIT（單條左右佔比） ════ */
+.split{display:flex;height:60px;overflow:hidden;margin:8px 0 4px;background:var(--hair);gap:1px}
+.split>div{display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12.5px;flex:0;
+  transition:flex 1s cubic-bezier(.25,1,.4,1);text-transform:uppercase;letter-spacing:.1em;
+  font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;white-space:nowrap}
+.s-front{background:var(--ink);color:var(--bg)} .s-open{background:var(--bar-3);color:var(--ink)}
+.split-lab{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink3);margin:24px 0 10px}
+
+/* ════ 財務表格 ════ */
+.tbl{margin-top:30px;overflow-x:auto;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px;font-variant-numeric:tabular-nums}
+caption{caption-side:top;text-align:left;padding:16px 18px 0;font-size:12px;letter-spacing:.04em;color:var(--ink3)}
+th,td{padding:13px 16px;text-align:right;border-bottom:1px solid var(--hair)}
+th:first-child,td:first-child{text-align:left;color:var(--ink2);font-weight:400}
+thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.hl td{color:var(--ink);font-weight:600;background:var(--panel)}
+td.pos{color:var(--pos)} td.neg{color:var(--neg)} td.hl{color:var(--ink);font-weight:600;background:var(--panel)}
+
+/* ════ SCISSORS（直條對比：兩序交叉） ════ */
+.scissor{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px;border:1px solid var(--line);padding:30px 26px}
+.sc{text-align:center}
+.sc .bars{display:flex;align-items:flex-end;justify-content:center;gap:10px;height:140px;background:none}
+.sc .b{width:26px;position:relative;align-self:flex-end;height:0;transition:height 1s cubic-bezier(.25,1,.4,1);border-radius:3px 3px 0 0}
+.sc .b.s{background:var(--pos)} .sc .b.a{background:var(--bar-2)}
+.sc .b span{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sc .yr{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-top:14px}
+.legend{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:22px;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:7px;vertical-align:middle}
+@media(max-width:760px){.scissor{grid-template-columns:repeat(2,1fr);gap:24px 14px}}
+
+/* ════ SOTP（分類加總列） ════ */
+.sotp{margin-top:30px;display:grid;gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.sr{display:grid;grid-template-columns:170px 1fr auto;gap:18px;align-items:center;background:var(--surface);padding:20px 22px}
+.sr .nm{font-weight:600}
+.sr .nm.c{color:var(--pos)} .sr .nm.b{color:var(--neg)}
+.sr .ds{font-size:14px;font-weight:300;color:var(--ink2);line-height:1.5}
+.sr .es{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:.02em}
+@media(max-width:760px){.sr{grid-template-columns:1fr;gap:6px}.sr .es{justify-self:start}}
+
+/* ════ BULL / BEAR（兩欄格線牆） ════ */
+.bb{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bbc{background:var(--surface);padding:32px 30px}
+.bbc .h{font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;color:var(--ink3)} /* 標題一律中性灰，多空只靠 ▲▼ 區分 */
+.bbc p{font-size:16px;font-weight:300;line-height:1.62;color:var(--ink2)}
+.bbc p strong{color:var(--ink);font-weight:500}
+@media(max-width:760px){.bb{grid-template-columns:1fr}}
+
+/* ════ CALLOUT / 引述框（中性 / 正 / 負） ════ */
+.callout{border:1px solid var(--line);border-left:3px solid var(--ink);padding:24px 26px;margin-top:30px}
+.callout.c{border-left-color:var(--pos)} .callout.b{border-left-color:var(--neg)}
+.callout p{font-size:17px;font-weight:300;line-height:1.65;color:var(--ink2)}
+.callout p strong{color:var(--ink);font-weight:500}
+
+/* ════ GLOSSARY tooltip（虛線詞＋hover 浮層） ════ */
+.gl{border-bottom:1px dotted var(--line);cursor:help;position:relative}
+.gl::after{content:attr(data-d);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(5px);
+  width:max-content;max-width:min(330px,82vw);background:var(--gl-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;font-family:var(--sf);font-size:13.5px;font-weight:300;line-height:1.6;letter-spacing:.01em;
+  color:var(--ink2);text-transform:none;text-align:left;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease;z-index:80;pointer-events:none;
+  box-shadow:0 16px 44px rgba(0,0,0,.45)}
+.gl:hover::after,.gl.open::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+
+/* ════ RISK GRID（2 欄卡片＋紅點＋強調數字） ════ */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.gcard{background:var(--surface);padding:28px 26px}
+.gcard .rt{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gcard .rt .d{width:7px;height:7px;border-radius:50%;background:var(--neg);flex:none}
+.gcard p{font-size:14.5px;font-weight:300;color:var(--ink2);line-height:1.62}
+.gcard .fig{color:var(--neg);font-weight:500;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+
+/* ════ TIMELINE（canonical 單一：大數字里程碑） ════ */
+.tl{margin-top:30px;border-top:1px solid var(--line)}
+.tl-row{display:grid;grid-template-columns:180px 1fr;gap:30px;padding:30px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.tl-when{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2)}
+.tl-what b{font-size:44px;font-weight:500;letter-spacing:.005em;margin-right:18px;font-variant-numeric:tabular-nums}
+.tl-what span{font-size:16px;font-weight:300;color:var(--ink2)}
+@media(max-width:760px){.tl-row{grid-template-columns:110px 1fr;gap:16px}}
+
+/* ════ FOOTER（結語＋meta＋免責） ════ */
+footer{border-top:1px solid var(--line);padding:80px 0 70px;text-align:center}
+footer .big{font-size:clamp(24px,3.4vw,38px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:820px;margin:0 auto 36px}
+footer .big b{font-weight:600}
+footer .big small{display:block;font-size:.5em;color:var(--ink3);margin-top:18px;font-weight:300}
+footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
+footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
+footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:30px auto 0;line-height:1.7}
+
+/* ════ 動效 ════ */
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev,.fill,.sg,.bar-fill,.b,.split>div{transition:none!important;opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">Nvidia 護城河</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#moat">供應鏈</a>
+      <a href="#cuda">CUDA 飛輪</a>
+      <a href="#cloud">不自建雲</a>
+      <a href="#china">賣晶片給中國</a>
+      <a href="#arch">單一架構</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- ════ HERO ════ -->
+<header class="hero"><div class="inner wrap">
+  <div class="ticker">
+    <span class="tk">DWARKESH POD</span>
+    <span class="mt">Podcast · 2026.04.16 · YouTube</span>
+  </div>
+  <h1>黃仁勳拆解 Nvidia 的<br><span class="hl">護城河</span>——<br><span class="thin">從電子變 token，到一場<span class="xline">賣晶片給中國</span>的長辯</span></h1>
+  <p class="sub">Dwarkesh Patel 步步進逼供應鏈、TPU、CUDA、為何不自建雲；Jensen 用「<b>五層蛋糕</b>」和「<b>做必要的事、盡可能少做</b>」逐層回應——而整場對話有近一半時間，卡在同一個問題：<b>該不該賣 AI 晶片給中國</b>。</p>
+  <div class="spine">
+    <span class="sk">對談主線</span>
+    <a class="si" href="#moat"><span class="sn">01</span> 五層護城河</a>
+    <a class="si" href="#cuda"><span class="sn">02</span> CUDA 飛輪</a>
+    <a class="si" href="#china"><span class="sn">03</span> 該不該賣中國</a>
+  </div>
+</div></header>
+
+<!-- ════ 儀表板 STRIP ════ -->
+<section style="padding-top:64px;border-top:none"><div class="wrap rev">
+  <div class="strip">
+    <div class="cell"><div class="k">上游採購承諾</div><div class="v num">~$1,000億</div><div class="n">晶圓廠·記憶體·封裝（財報）</div></div>
+    <div class="cell"><div class="k">SemiAnalysis 估</div><div class="v num">$2,500億</div><div class="n">採購承諾規模</div></div>
+    <div class="cell"><div class="k">AI 佔 N3 製程</div><div class="v num">60%</div><div class="n">今年 → 明年估 86%</div></div>
+    <div class="cell"><div class="k">Nvidia 毛利率</div><div class="v num">~70%</div><div class="n">ASIC 約 65%</div></div>
+    <div class="cell"><div class="k">前五大客戶</div><div class="v num">60%</div><div class="n">佔 Nvidia 營收</div></div>
+    <div class="cell"><div class="k">美國 vs 全球算力</div><div class="v num">100×</div><div class="n">Jensen：美國領先</div></div>
+  </div>
+  <p class="cap">數字均出自本集對談（Dwarkesh Patel × Jensen Huang，2026.04.16）。「~$1,000億」為財報揭露的接近 $100B 採購承諾；$2,500億為 SemiAnalysis 報導值。AI 佔 N3「今年 60%、明年 86%」與「美國算力 100×」分別為 Dwarkesh 與 Jensen 在對話中所述。</p>
+</div></section>
+
+<!-- ════ 00 · 心智模型 ════ -->
+<section id="model"><div class="wrap rev">
+  <div class="label"><span class="n">00</span> 心智模型</div>
+  <h2>電子進，token 出，<span class="thin">中間是 Nvidia</span></h2>
+  <p class="lede">對話從一個威脅開始：一堆軟體公司估值崩跌，因為市場預期 AI 會把軟體商品化。如果 Nvidia 本質上只是把一個 <span class="gl" data-d="GDS2（GDSII）是晶片佈局的標準檔案格式——把電路設計交付給晶圓廠製造用的「圖紙」。">GDS2 檔</span> 送去 TSMC，它會不會也被商品化？</p>
+  <p class="body">Jensen 的反駁很簡單：「<strong>最終，總得有東西把電子轉換成 token。</strong>」而讓 token 隨時間越來越有價值——那背後的藝術性、工程、科學與發明——「遠遠還沒被深入理解，這趟旅程也遠遠還沒結束」。他不認為這會被商品化。</p>
+  <p class="body">這正是他對公司的心智模型：<strong>輸入是電子，輸出是 token，中間是 Nvidia</strong>。工作是「做所有必要的事，但盡可能少做」——不必做的就交給夥伴。AI 是一個「<strong>五層蛋糕</strong>」，Nvidia 五層都有生態系，只親手做最難的那部分。</p>
+  <div class="pull">
+    <div class="q">輸入是電子，輸出是 token。中間是 Nvidia。我們的工作是做所有必要的事，<b>但盡可能少做</b>。</div>
+    <div class="who">Jensen Huang</div>
+  </div>
+</div></section>
+
+<!-- ════ 01 · 供應鏈護城河 ════ -->
+<section id="moat"><div class="wrap rev">
+  <div class="label"><span class="n">01</span> 護城河一 · 供應鏈</div>
+  <h2>鎖住稀缺供應鏈，<span class="thin">用下游需求換上游產能</span></h2>
+  <p class="lede">Dwarkesh 的假設：Nvidia 真正的護城河，是它鎖定了好幾年的稀缺元件。別人就算有加速器，拿得到記憶體、拿得到邏輯晶片來做嗎？</p>
+  <p class="body">Jensen 部分同意——「這是我們能做到、但別人很難做到的事」。上游有明確承諾（接近 $1,000 億，SemiAnalysis 報導上看 $2,500 億），也有隱性的：很多投資是供應鏈自己做的，因為他親自去「<strong>通知、啟發、對齊</strong>」TSMC、ASML、Micron 等上游 CEO。他們願意為 Nvidia 投資而非別人，「因為他們知道我有能力買下他們的產能，再透過下游賣出去」。</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">2<small>×</small></div><div class="l">營收年增（已持續多年）</div></div>
+    <div class="bignum"><div class="v num">3<small>×+</small></div><div class="l">每年提供給世界的 flops 增幅</div></div>
+    <div class="bignum"><div class="v num">60<small>%</small></div><div class="l">今年 AI 佔 TSMC N3 製程</div></div>
+    <div class="bignum"><div class="v num">86<small>%</small></div><div class="l">SemiAnalysis 估明年 AI 佔 N3</div></div>
+  </div>
+  <p class="cap">口徑：Nvidia 多年以年增 2× 成長營收、flops 年增逾 3×；Dwarkesh 引 SemiAnalysis 指 AI 今年佔 N3 約 60%、明年 86%——並質疑「已是多數，怎麼再翻倍」。</p>
+  <p class="body">Jensen 的核心主張：<strong>沒有哪個瓶頸會持續超過兩三年</strong>。<span class="gl" data-d="CoWoS（Chip-on-Wafer-on-Substrate）：台積電的先進封裝技術，把邏輯晶片與 HBM 記憶體封裝在一起，是 AI 晶片的關鍵產能瓶頸之一。">CoWoS</span> 被「猛攻兩年、翻倍再翻倍」，現在台積電已把它和未來封裝技術用跟邏輯製程同等速度擴產；<span class="gl" data-d="EUV（極紫外光微影）：製造最先進邏輯與記憶體晶片所需的曝光機台，全球僅 ASML 能造，是中國因出口管制拿不到的關鍵設備。">EUV</span> 機台、<span class="gl" data-d="HBM（高頻寬記憶體）：把多層 DRAM 垂直堆疊、緊貼運算晶片，提供 AI 訓練／推論所需的巨大記憶體頻寬。">HBM</span> 都是 2–3 年問題。同時架構與演算法每代再把效率拉 10–50 倍。</p>
+  <div class="callout">
+    <p><strong>他真正擔心的不在晶片，而在下游。</strong>能源政策、以及更難擴張的——水電工和電工。「你不能沒有能源就建立一整個新的製造業。」他半開玩笑：<strong>「水電工被邀請參加明年的 GTC 了。」</strong></p>
+  </div>
+</div></section>
+
+<!-- ════ 02 · CUDA 飛輪 / TPU ════ -->
+<section id="cuda"><div class="wrap rev">
+  <div class="label"><span class="n">02</span> 護城河二 · CUDA 飛輪</div>
+  <h2>加速運算，<span class="thin">不是張量處理器</span></h2>
+  <p class="lede">全世界前三大模型有兩個——Claude 和 Gemini——在 <span class="gl" data-d="TPU（張量處理器）：Google 自研的 AI 加速器，本質是一個大型 systolic array，專為矩陣乘法最佳化；對應 Amazon 的 Trainium。">TPU</span> 上訓練。這對 Nvidia 意味什麼？Jensen：我們建的是「加速運算」，不是張量處理器。</p>
+  <p class="body">朋友告訴 Dwarkesh：TPU 就是個大型 <span class="gl" data-d="Systolic array（脈動陣列）：一種把資料像脈搏一樣在運算單元間規律推進的硬體結構，極適合一遍又一遍的矩陣乘法，但較不靈活。">systolic array</span>，非常適合矩陣乘法；而 AI 不就是這些可預測的矩陣乘法一遍又一遍？Jensen 反駁：<strong>矩陣乘法是 AI 的重要部分，但不是全部</strong>。要發明新注意力機制、做混合 <span class="gl" data-d="SSM（狀態空間模型）：Transformer 之外的一種序列模型架構，計算成本隨序列長度線性成長；「混合 SSM」把它與注意力機制結合。">SSM</span>、融合擴散與自迴歸、做 <span class="gl" data-d="MoE（Mixture of Experts，專家混合）：模型內含多個「專家」子網路，每個 token 只啟動一小部分，藉此放大參數量卻不等比放大運算量。">MoE</span>，你需要一個通用可程式的架構——這才是超越摩爾定律每年約 25% 的 <strong>10–100 倍跳躍</strong> 來源。</p>
+  <div class="bento">
+    <div class="card"><span class="ico">裝機量</span><h3>好幾億顆 GPU</h3><p>從 A100、H100、H200 到 L／P 系列，<b>每個雲端都有</b>。一旦你開發了軟體或模型，它在哪裡都有用——甚至跑進機器人本身。</p></div>
+    <div class="card"><span class="ico">可程式性</span><h3>F1 而非凱迪拉克</h3><p>CPU 像不錯的巡航車；Nvidia 的 GPU 像 <b>F1 賽車</b>。「<b>沒有人比我們更了解自己的架構</b>」——常再幫實驗室榨出 2–3 倍。</p></div>
+    <div class="card"><span class="ico">生態系</span><h3>最豐富的框架</h3><p>Triton、vLLM、SGLang、新的 RL 框架……全跑在 CUDA 上。幾萬家 AI 公司，<b>都會選最普及、裝機量最大的架構</b>。</p></div>
+  </div>
+  <div class="pull">
+    <div class="q">每個人都能把它開到時速 100 英里，<b>但要把它推到極限，需要相當的專業知識。</b></div>
+    <div class="who">Jensen Huang · 論 GPU 像 F1 賽車</div>
+  </div>
+  <p class="body">那 65% vs 70% 的問題呢？Dwarkesh 指出 Nvidia 毛利率超過 70%，若客戶能自建繞過 CUDA，還守得住嗎？Jensen 回：<strong>即使 ASIC，毛利率也相當高——Nvidia 約 70%，ASIC 約 65%，你真正省了什麼？</strong> 而 TCO（總體擁有成本）效能比，「全世界最好，沒有例外」。</p>
+  <div class="callout">
+    <p><strong>「Dylan 的 InferenceMAX 就在那裡⋯⋯TPU 不來，Trainium 不來。」</strong>Jensen 直接點名公開 benchmark 邀對手來比成本，並把 Anthropic 用 TPU／Trainium 定性為「<strong>特殊案例，不是趨勢</strong>」——驅動力是 Google／AWS 數十億美元的投資關係，不是技術優勢。</p>
+  </div>
+</div></section>
+
+<!-- ════ 03 · 為何不自建雲 ════ -->
+<section id="cloud"><div class="wrap rev">
+  <div class="label"><span class="n">03</span> 哲學 · 為何不自建雲</div>
+  <h2>「做必要的事，<span class="thin">但盡可能少做」</span></h2>
+  <p class="lede">Nvidia 有的是現金。為什麼不自己當超大規模雲端、或更早自己變成一家基礎 AI 實驗室、在估值翻十倍之前就出手？</p>
+  <p class="body">同一套哲學：建運算平台「<strong>如果我們不做，沒人會做</strong>」——堅持 20 年 CUDA、大多時間在賠錢，才有今天的加速運算。但雲端「世界上有很多公司願意做」。所以 Nvidia 投資 CoreWeave、Nscale、Nebius 讓他們的飛輪轉起來，卻不想踏進「<strong>融資業務</strong>」。</p>
+  <p class="body">他也刻意<strong>不挑贏家</strong>：當年 60 家 3D 圖形公司，Nvidia 是「最不可能活下來」的那家——最初的架構「完全是錯的，開發者根本不可能支援」。「我有足夠的謙遜認識到這一點。要嘛讓他們所有人自己搞定，要嘛照顧所有人。」</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">$300<small>億</small></div><div class="l">近期投資 OpenAI（報導值）</div></div>
+    <div class="bignum"><div class="v num">$100<small>億</small></div><div class="l">近期投資 Anthropic（報導值）</div></div>
+    <div class="bignum"><div class="v num">60<small>→1</small></div><div class="l">3D 圖形公司，僅 Nvidia 存活</div></div>
+    <div class="bignum"><div class="v num">~30<small>年</small></div><div class="l">與 TSMC 的關係——且無法律合約</div></div>
+  </div>
+  <p class="cap">口徑：OpenAI 約 $300 億、Anthropic 約 $100 億為對談中引用的報導金額；另報導 Nvidia 為 CoreWeave 擔保上看 $63 億、並投資 $20 億。Jensen 與 TSMC「快 30 年」的關係沒有法律合約，「總是有一些粗略的平衡」。</p>
+  <div class="callout">
+    <p><strong>一個坦承的錯誤：</strong>「我的錯誤是沒有深刻理解到他們真的沒有其他選擇——VC 不可能投 50 到 100 億美元到一個 AI 實驗室，寄望它變成 Anthropic。」當年 Nvidia 沒能力做供應商等級的投資，Google 和 AWS 做了，於是 Anthropic 用了他們的算力。「但我不會再犯同樣的錯誤了。」</p>
+  </div>
+  <p class="body">至於稀缺配額，Jensen 否認「分裂市場」的說法：規則是<strong>先做好預測、再先到先得（看誰先下 PO、資料中心是否就緒）</strong>，但<strong>從不照價高者得</strong>——「我更願意成為值得信賴的、成為產業的基石。如果我給你報了個價，我們就報了個價。」這份「每年一代、可以像看鐘一樣依賴」，是他眼中沒有任何 ASIC 團隊能給的承諾。</p>
+</div></section>
+
+<!-- ════ 04 · 賣晶片給中國（核心爭議） ════ -->
+<section id="china"><div class="wrap rev">
+  <div class="label"><span class="n">04</span> 核心爭議 · 中國</div>
+  <h2>該不該賣 AI 晶片給中國？<span class="thin">近半場的硬碰硬</span></h2>
+  <p class="lede">這是全集最長、最針鋒相對的一段，兩人繞了一個多小時。Dwarkesh 自承「其實也不確定」，但故意唱反調支持出口管制；Jensen 則主張該賣。下面是兩種立場的對照。</p>
+
+  <div class="strip">
+    <div class="cell"><div class="k">主流晶片</div><div class="v num">60%</div><div class="n">中國製造（或更多）</div></div>
+    <div class="cell"><div class="k">AI 研究員</div><div class="v num">50%</div><div class="n">全球佔比在中國</div></div>
+    <div class="cell"><div class="k">AI 開發者</div><div class="v num">50%</div><div class="n">在中國</div></div>
+    <div class="cell"><div class="k">全球科技業</div><div class="v num">~40%</div><div class="n">中國佔比</div></div>
+    <div class="cell"><div class="k">7nm 晶片</div><div class="v num">≈ Hopper</div><div class="n">今天模型多在 Hopper 世代訓練</div></div>
+    <div class="cell"><div class="k">中國 flops</div><div class="v num">~1/10</div><div class="n">部分估計：相對美國</div></div>
+  </div>
+  <p class="cap">口徑：中國 60% 主流晶片、50% AI 研究員、50% AI 開發者、~40% 全球科技業，皆為對談中所述；「7nm ≈ Hopper」「能源充沛可彌補晶片效率」是 Jensen 論點核心。中國 flops「約美國十分之一」是 Dwarkesh 引用的第三方估計，非 Jensen 同意的數字。</p>
+
+  <div class="bb">
+    <div class="bbc bull">
+      <div class="h">▲ Dwarkesh · 主張出口管制</div>
+      <p>中國卡在 7nm（沒有 EUV），<strong>可產出的 flops 估計只有美國約十分之一</strong>。美國實驗室靠更多算力<strong>先到達 Mythos 級能力</strong>，能先暫緩發布、讓大家把漏洞補上。部署規模也取決於算力——<strong>一百萬個網路駭客比一千個危險得多</strong>。任何邊際算力都有幫助，所以賣晶片就是在縮短中國追上的時間。</p>
+    </div>
+    <div class="bbc bear">
+      <div class="h">▼ Jensen · 主張該賣</div>
+      <p>中國<strong>已經有「巨大」的算力</strong>——你擔心的門檻早就跨過了。充沛、近乎免費的能源能彌補晶片效率（<strong>7nm 基本上就是 Hopper</strong>），Huawei 剛創下歷史最大營收年、出貨數百萬顆。管制只是把<strong>全球第二大市場拱手讓人</strong>，反而加速中國本土晶片與非美技術棧——50% 的開發者在中國，失去這個生態系等於失去技術領導。</p>
+    </div>
+  </div>
+
+  <div class="callout b">
+    <p><strong>Dwarkesh 最尖銳的鉤子——Mythos：</strong>Anthropic 的 Mythos 因網路攻擊能力太強而暫不公開釋出，宣稱在每個主流作業系統與瀏覽器找到<strong>數千個高嚴重性漏洞</strong>，包括 OpenBSD 一個<strong>存在 27 年</strong>的零日。若中國能訓練並跑數百萬個這種模型的實例呢？</p>
+  </div>
+  <p class="body">Jensen 的回應：Mythos「是用<strong>相當普通的算力</strong>訓練的，量也相當普通」，這在中國「<strong>完全可以取得</strong>」。他把 AI 拆成五層蛋糕，最底層是能源：「<strong>當你有充沛的能源，它可以彌補晶片。</strong>」</p>
+  <div class="pull">
+    <div class="q">如果你的電力完全充沛、免費的，<b>你幹嘛在乎每瓦效能？</b>你有的是。你可以用舊晶片來做。</div>
+    <div class="who">Jensen Huang · 論中國的能源優勢</div>
+  </div>
+  <p class="body">當 Dwarkesh 把 AI 類比成濃縮鈾，Jensen 斥為「一個爛比喻、不合邏輯」。他更擔心的是反向風險：若全世界的 AI 模型最後都在<strong>非美國硬體</strong>上跑得最好，「那才是壞消息」。他搬出歷史教訓——</p>
+  <div class="callout">
+    <p><strong>電信業的前車之鑑：</strong>「你倡導的政策，導致美國電信產業基本上被逼出全球市場，到了我們連自己的電信都控制不了的地步。」他稱極端管制立場「<strong>幼稚</strong>」「<strong>短視</strong>」，是一種「<strong>輸家心態</strong>」。</p>
+  </div>
+  <p class="body">兩人最後把爭點收斂成「<strong>潛在好處 vs 潛在成本</strong>」。Dwarkesh 要 Jensen 承認賣晶片的成本；Jensen 反過來指出不賣的成本同樣真實。雙方都把對方框成「代價」——</p>
+  <div class="grid2">
+    <div class="gcard"><div class="rt"><span class="d"></span>Dwarkesh 指的成本</div><p>若中國因更多算力<span class="fig">更早</span>做出並大規模部署 Mythos 級模型，對美國國安非常糟；美國先到、先暫緩發布、先補漏洞的緩衝會消失。</p></div>
+    <div class="gcard"><div class="rt"><span class="d"></span>Jensen 指的成本</div><p>把晶片層的<span class="fig">全球第二大</span>市場讓出，反而長期輸掉技術競賽——讓未來 AI 模型在非美技術棧上最佳化，並擴散到全球南方。</p></div>
+  </div>
+  <div class="pull">
+    <div class="q">你不是在跟一個天生就是輸家的人說話。<b>那種輸家態度、輸家前提，對我來說完全沒道理。</b></div>
+    <div class="who">Jensen Huang</div>
+  </div>
+  <p class="body">他也不接受「全有或全無」的框架：「<strong>我們應該永遠在這裡擁有最好、最多、最先的技術——但也應該試著在全世界競爭和贏。這兩件事可以同時發生。</strong>」這需要一些細膩度與成熟度，「世界不是絕對的」。</p>
+</div></section>
+
+<!-- ════ 05 · 單一架構 + 收尾 ════ -->
+<section id="arch"><div class="wrap rev">
+  <div class="label"><span class="n">05</span> 收尾 · 為何單一架構</div>
+  <h2>模擬過所有替代架構，<span class="thin">「可證明比較差」</span></h2>
+  <p class="lede">既然有資源和人才，為什麼不同時做晶圓級（像 Cerebras）、大封裝（像 Dojo）、甚至不用 CUDA 的多種架構，分散押注？</p>
+  <p class="body">Jensen：「我們可以做。只是<strong>我們沒有更好的想法</strong>。我們在模擬器裡跑過，<strong>可證明比較差</strong>，所以不會做。」唯一會擴的是 workload 真的變了——例如併入 <span class="gl" data-d="Groq：主打超低延遲推論的 AI 晶片公司；Nvidia 收購後要把它併入 CUDA 生態系，服務「極高 ASP」的即時 token 市場。">Groq</span>，把超低延遲推論納入 CUDA 生態，服務「極高 ASP」的 token（如付得起錢、要更快回應的開發者）。這是<strong>擴展帕累托前沿</strong>，而這個市場區隔「最近才出現」。</p>
+  <p class="body">那回頭用舊製程（如 7nm）多做點 Hopper 級晶片呢？沒必要——每代架構「不只是電晶體尺寸」，退回去的研發成本「沒有人負擔得起」。但他補一句思想實驗：如果哪天確定「永遠不會再有更多產能」，要不要回去用 7nm？「<strong>毫不猶豫，當然會。</strong>」</p>
+  <div class="pull">
+    <div class="q">即使今天沒有 AI，<b>Nvidia 也會非常非常大。</b></div>
+    <div class="who">Jensen Huang</div>
+  </div>
+  <p class="body">因為通用運算的擴展「基本上已經到了盡頭」，而加速運算服務的是物理、科學、數據處理、<span class="gl" data-d="計算光刻（computational lithography）：用大量運算修正光罩圖案、補償光學失真，讓更小的電晶體能被正確曝光。Nvidia 為此做了 cuLitho 函式庫。">計算光刻</span>、分子動力學等通用運算「太低效而做不了」的領域。「張量不是唯一的計算方式。我們想幫助每一個人。」</p>
+</div></section>
+
+<!-- ════ FOOTER ════ -->
+<footer><div class="wrap rev">
+  <div class="big">「Nvidia 能成為全世界 AI 產業的基石——<b>這個位置，我們花了幾十年才到達。</b>」<small>護城河會不會持續？這一集，是 Jensen 對供應鏈、CUDA、雲端與中國的逐層辯護。</small></div>
+  <div class="meta">
+    Dwarkesh Patel Podcast · 2026.04.16<br>
+    Jensen Huang · Dwarkesh Patel<br>
+    <a href="https://www.youtube.com/watch?v=Hrbq66XqtCo" target="_blank" rel="noopener">youtube.com/watch?v=Hrbq66XqtCo</a> · dwarkesh.com
+  </div>
+  <p class="disc">本頁為對談的重點整理，數字與引述取自該集內容，屬講者觀點與預測，非投資建議。圖表為示意比例，用於傳達量級關係；部分數字（如中國 flops 約為美國十分之一）為對談中引用的第三方估計，非講者背書。</p>
+</div></footer>
+
+<script>
+/* ── 全站標準 JS（每個 note 檔頁尾都複製這段） ── */
+// nav 捲動加底線
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+
+// 進場 reveal + 圖表生長（涵蓋所有資料元件的 data-* 觸發）
+function grow(el){
+  el.querySelectorAll('.bar-fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.sg[data-w]').forEach(b=>b.style.width=(parseFloat(b.dataset.w)/2)+'%'); // 零軸發散：半幅
+  el.querySelectorAll('.b[data-h]').forEach(b=>b.style.height=b.dataset.h+'%');
+  el.querySelectorAll('.split>div[data-flex]').forEach(s=>s.style.flex=s.dataset.flex);
+}
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(!e.isIntersecting)return;
+    e.target.classList.add('in'); grow(e.target); io.unobserve(e.target); });
+},{threshold:.14});
+document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+
+// glossary：手機點擊切換
+document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
+  e.stopPropagation();
+  const open=el.classList.contains('open');
+  document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open'));
+  if(!open)el.classList.add('open');
+}));
+document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+
+// theme toggle（初始主題由 <head> inline script 設定，避免 FOUC）
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>

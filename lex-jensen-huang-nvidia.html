@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JENSEN HUANG × LEX FRIDMAN #494 — 協同設計、SCALING LAW 與 TOKEN 工廠</title>
+<!-- 首頁列表中繼資料（build-index.js 讀取，產生 notes.json）。新增筆記時請一併填寫。 -->
+<meta name="note:src" content="Lex Fridman #494">
+<meta name="note:date" content="2026.03.24">
+<meta name="note:title" content="Jensen Huang：四條 scaling law，和一座把瓦特變成 token 的工廠">
+<meta name="note:dek" content="NVIDIA 成全球市值最高公司，Jensen Huang 拆解極致協同設計、四條 scaling law、token 工廠，以及為什麼智慧會被商品化、該捧高的是人性。">
+<meta name="note:people" content="Jensen Huang · Lex Fridman">
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* —— Canonical token superset：每個 note 檔複製同一份（見 DESIGN-SYSTEM.md §2） —— */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --track:rgba(255,255,255,.06);
+  --accent:#9db7d8;                 /* cold steel：連結/編號/focus */
+  --mark:rgba(157,183,216,.28);     /* 搜尋高亮 */
+  --pos:#37d6ad;                    /* 正向 / cash engine / bull */
+  --neg:#ff5a4d;                    /* 負向 / burn / bear */
+  /* data-viz：accent 同色濃淡 ramp（最強→最弱） */
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
+  --gl-bg:#15161b;                  /* glossary tooltip 面 */
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+  --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+
+/* ── base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.up{text-transform:uppercase;letter-spacing:.22em}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* ════════ NAV + theme toggle（全站 chrome，54px 毛玻璃） ════════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:30px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* ════════ buttons ════════ */
+.btn{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.2em;padding:13px 26px;border:1px solid var(--line);border-radius:2px;color:var(--ink);
+  transition:background .25s,color .25s,border-color .25s}
+.btn:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.ghost{border-color:transparent;padding-left:0;padding-right:0}
+.btn.ghost:hover{background:transparent;color:var(--ink2)}
+.btn .ar{font-size:14px}
+
+/* ════════ HERO（canonical 單一：靠左 ticker） ════════ */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none}
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 .hl{color:var(--accent)}                /* 裝飾性強調（藍）— 一般 hero 重點預設用這個 */
+.hero h1 u{text-decoration:none;color:var(--pos)} /* 語意正向（綠）— 只在真有正向含義時 */
+.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--ink);padding-bottom:2px;line-height:1} /* 中性底線強調 */
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+.hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+.hero .cta{margin-top:40px;display:flex;gap:18px;flex-wrap:wrap}
+/* 主線預告（hero 尾段）：lead 標 + 編號 chips，預告骨幹、兼作頁內錨點；取代純跳轉 CTA。nav 仍是完整 TOC。 */
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
+
+/* ════════ SECTION · label · 文字 ════════ */
+section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em} /* canonical：編號框 */
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em;margin-bottom:20px}
+h2 .thin{font-weight:300}
+.lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:760px}
+p.body{font-size:18px;font-weight:300;line-height:1.7;color:var(--ink2);max-width:760px;margin-top:26px}
+p.body strong{color:var(--ink);font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  border:1px solid var(--line);border-radius:2px;padding:2px 9px;margin:0 3px;vertical-align:2px;color:var(--ink)}
+.who{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);margin-top:30px}
+
+/* ════════ THESIS / PULL-QUOTE ════════ */
+.pull{padding:60px 0 48px;text-align:center}
+.pull .q{font-size:clamp(24px,3.6vw,40px);font-weight:300;line-height:1.34;letter-spacing:.005em;max-width:920px;margin:0 auto}
+.pull .q b{font-weight:600}
+.pull .who{margin-top:30px}
+
+/* ════════ BIG NUMBERS（4 欄） ════════ */
+.bignums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:20px;border-top:1px solid var(--line)}
+.bignum{padding:38px 26px 34px;border-right:1px solid var(--hair)}
+.bignum:last-child{border-right:none}
+.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bignum .v small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:.02em}
+.bignum .l{font-size:14px;font-weight:300;color:var(--ink2);margin-top:18px;line-height:1.5}
+@media(max-width:760px){.bignums{grid-template-columns:1fr 1fr}.bignum{border-bottom:1px solid var(--hair)}.bignum:nth-child(2){border-right:none}}
+
+/* ════════ METRIC STRIP（6 欄格線牆） ════════ */
+.strip{margin-top:30px;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cell{background:var(--surface);padding:20px 18px}
+.cell .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cell .v{font-size:26px;font-weight:500;margin-top:10px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .n{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.4}
+@media(max-width:760px){.strip{grid-template-columns:repeat(2,1fr)}}
+
+/* ════════ BENTO 卡片牆（3 / 2 欄）+ stat 變體 ════════ */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bento2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.card{background:var(--surface);padding:40px 34px}
+.card .ico{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);display:block;margin-bottom:22px}
+.card h3{font-size:23px;font-weight:600;letter-spacing:.01em;margin-bottom:14px}
+.card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.card p b{color:var(--ink);font-weight:500}
+.card .stat{font-size:50px;font-weight:500;line-height:1;letter-spacing:.005em;margin-bottom:20px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.bento,.bento2{grid-template-columns:1fr}}
+
+/* ════════ 橫條圖 / 進度條（含標題＋註腳） ════════ */
+.chart{border:1px solid var(--line);margin-top:30px;padding:42px 42px 36px}
+.chart .ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--ink3);margin-bottom:8px}
+.chart .cs{font-size:23px;font-weight:500;letter-spacing:.01em;margin-bottom:38px}
+.bars{display:flex;flex-direction:column;gap:1px;background:var(--hair)}
+.bar-row{display:grid;grid-template-columns:160px 1fr;align-items:stretch;background:var(--surface)}
+.bar-lab{font-size:13px;font-weight:300;color:var(--ink2);display:flex;flex-direction:column;justify-content:center;
+  align-items:flex-end;text-align:right;padding:0 22px 0 0;letter-spacing:.02em}
+.bar-lab b{color:var(--ink);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;margin-bottom:3px}
+.bar-track{position:relative;height:48px;background:var(--track);overflow:hidden}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;transition:width 1.3s cubic-bezier(.25,1,.4,1);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
+.bar-fill .v{font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
+.bf-1 .v{color:var(--bar-1-ink)} .bf-2 .v{color:var(--bar-2-ink)} .bf-3 .v{color:var(--bar-3-ink)}   /* §2 每階自帶反白字色 */
+.bar-fill.out{overflow:visible;padding-right:0}                  /* 窄條：標籤外置，避免被 track 的 overflow:hidden 裁掉 */
+.bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
+.cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}
+@media(max-width:760px){.chart{padding:28px 22px}.bar-row{grid-template-columns:108px 1fr}.bar-lab{padding-right:14px}}
+
+/* ════════ CALLOUT / 引述框（中性 / 正 / 負） ════════ */
+.callout{border:1px solid var(--line);border-left:3px solid var(--ink);padding:24px 26px;margin-top:30px}
+.callout.c{border-left-color:var(--pos)} .callout.b{border-left-color:var(--neg)}
+.callout p{font-size:17px;font-weight:300;line-height:1.65;color:var(--ink2)}
+.callout p strong{color:var(--ink);font-weight:500}
+
+/* ════════ GLOSSARY tooltip（虛線詞＋hover 浮層） ════════ */
+.gl{border-bottom:1px dotted var(--line);cursor:help;position:relative}
+.gl::after{content:attr(data-d);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(5px);
+  width:max-content;max-width:min(330px,82vw);background:var(--gl-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;font-family:var(--sf);font-size:13.5px;font-weight:300;line-height:1.6;letter-spacing:.01em;
+  color:var(--ink2);text-transform:none;text-align:left;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease;z-index:80;pointer-events:none;
+  box-shadow:0 16px 44px rgba(0,0,0,.45)}
+.gl:hover::after,.gl.open::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+
+/* ════════ TIMELINE（canonical 單一：大數字里程碑） ════════ */
+.tl{margin-top:30px;border-top:1px solid var(--line)}
+.tl-row{display:grid;grid-template-columns:180px 1fr;gap:30px;padding:30px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.tl-when{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2)}
+.tl-what b{font-size:44px;font-weight:500;letter-spacing:.005em;margin-right:18px;font-variant-numeric:tabular-nums}
+.tl-what span{font-size:16px;font-weight:300;color:var(--ink2)}
+@media(max-width:760px){.tl-row{grid-template-columns:110px 1fr;gap:16px}}
+
+/* ════════ FOOTER（結語＋meta＋免責） ════════ */
+footer{border-top:1px solid var(--line);padding:80px 0 70px;text-align:center}
+footer .big{font-size:clamp(24px,3.4vw,38px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:820px;margin:0 auto 36px}
+footer .big b{font-weight:600}
+footer .big small{display:block;font-size:.5em;color:var(--ink3);margin-top:18px;font-weight:300}
+footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
+footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
+footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:30px auto 0;line-height:1.7}
+
+/* ════════ 動效 ════════ */
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev,.fill,.sg,.bar-fill,.b,.split>div{transition:none!important;opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ NAV ════════ -->
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">Jensen Huang × Lex #494</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#codesign">協同設計</a>
+      <a href="#scaling">Scaling</a>
+      <a href="#factory">Token 工廠</a>
+      <a href="#geo">中國·TSMC</a>
+      <a href="#humanity">人性</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- ════════ HERO ════════ -->
+<header class="hero"><div class="inner wrap">
+  <div class="ticker">
+    <span class="tk">LEX FRIDMAN #494</span>
+    <span class="mt">Podcast · 2026.03.24 · 約 2h26m</span>
+  </div>
+  <h1>極致協同設計、<span class="hl">四條 scaling law</span>，<br><span class="thin">和一座把瓦特變成 <span class="xline">token</span> 的工廠</span></h1>
+  <p class="sub">NVIDIA 成為全球市值最高公司的這一年，Jensen Huang 用兩個半小時把他 <b>34 年只做一件事</b>的思考方式攤開來：每件事先問物理極限，再從那裡往回推。從 GPU 到整座資料中心、從預訓練到代理式 AI，到最後——為什麼他說智慧會被商品化，真正該捧高的是人性。</p>
+  <div class="spine">
+    <span class="sk">論述主線</span>
+    <a class="si" href="#codesign"><span class="sn">01</span> 裝不進一台電腦</a>
+    <a class="si" href="#factory"><span class="sn">02</span> 倉庫變工廠</a>
+    <a class="si" href="#humanity"><span class="sn">03</span> 智慧會商品化</a>
+  </div>
+</div></header>
+
+<!-- ════════ 儀表板 ════════ -->
+<section><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">00</span> By the Numbers</div>
+    <h2>這場對話<span class="thin">的量級</span></h2>
+    <div class="strip">
+      <div class="cell"><div class="k">直屬主管</div><div class="v num">60</div><div class="n">人，且不做一對一</div></div>
+      <div class="cell"><div class="k">十年運算成長</div><div class="v num">1,000,000×</div><div class="n">Moore's Law 約 100×</div></div>
+      <div class="cell"><div class="k">Token 成本</div><div class="v num pos">−1 級／年</div><div class="n">每年降一個數量級</div></div>
+      <div class="cell"><div class="k">Colossus</div><div class="v num">4 個月</div><div class="n">蓋到 20 萬顆 GPU</div></div>
+      <div class="cell"><div class="k">CUDA 推手</div><div class="v num">43,000</div><div class="n">人＋數百萬開發者</div></div>
+      <div class="cell"><div class="k">寫程式的人</div><div class="v num">30M→1B</div><div class="n">「寫規格就是寫程式」</div></div>
+    </div>
+    <div class="cap">數字皆引自本集對話；口徑與脈絡見各段落。</div>
+  </div>
+</div></section>
+
+<!-- ════════ 01 · 極致協同設計 ════════ -->
+<section id="codesign"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">01</span> Extreme Co-Design</div>
+    <h2>問題已經<span class="thin">裝不進一台電腦</span></h2>
+    <p class="lede">NVIDIA 早就不只是「做最好的 GPU」。當問題大到一顆 GPU 裝不下，你就得把它拆開、分散到上萬台電腦——然後一頭撞上 <span class="gl" data-d="Amdahl's Law：系統的加速上限，受限於沒被加速的那部分。若運算只占總工作量 50%，把運算加速一百萬倍，整體也只快兩倍。">Amdahl's Law</span>。</p>
+    <p class="body">Jensen 的解法是<strong>極致協同設計</strong>：從架構、晶片、系統、系統軟體、演算法到應用整條堆疊一起最佳化，而且範圍早已超出 CPU／GPU／網路晶片，延伸到<strong>電力、散熱、機架、pod、乃至整座資料中心</strong>。原因很直接——你加了一萬台電腦，卻希望它快上一百萬倍；要做到，運算、網路、交換、工作負載分配每一塊都不能是瓶頸。否則你只能靠已經放緩的 Moore's Law 線性前進。</p>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">"It is the most complex computer <b>the world has ever made</b>."</div>
+    <div class="who">Jensen Huang · 談 Vera Rubin 系統</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">具體有多複雜？他在訪談中報出 <strong>一個 Vera Rubin pod</strong> 的規格——7 種晶片、5 種專用機架、40 座機架，加起來是這些數字：</p>
+    <div class="bignums">
+      <div class="bignum"><div class="v num">1,100<small>+</small></div><div class="l">顆 Rubin GPU（單一 pod）</div></div>
+      <div class="bignum"><div class="v num">~20<small>K</small></div><div class="l">顆 NVIDIA die</div></div>
+      <div class="bignum"><div class="v num">1.2<small>Quad.</small></div><div class="l">quadrillion 顆電晶體</div></div>
+      <div class="bignum"><div class="v num">60<small>EF</small></div><div class="l">exaflops 運算、10 PB/s scale 頻寬</div></div>
+    </div>
+    <p class="body">再往下一層：光是一座 NVL72 機架就有 <strong>130 萬個元件、約 1,300 顆晶片</strong>，背後是 200 家供應商。而 NVIDIA 大概得<strong>每週產出約 200 個這樣的 pod</strong>。Jensen 的工程信條是一句話——<strong>「該多複雜就多複雜，但能多簡單就多簡單」</strong>，所有複雜度都要被質疑：它真的必要嗎？</p>
+  </div>
+</div></section>
+
+<!-- ════════ 02 · 怎麼經營 NVIDIA ════════ -->
+<section id="run"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">02</span> How Jensen Runs It</div>
+    <h2>不是下命令，<span class="thin">是長年鋪墊信念</span></h2>
+    <p class="lede">他的直屬團隊 60 人、不做一對一。所有重大問題都當著大家的面公開推理——因為公司本身就是一台「極致協同設計」的機器，沒有任何決定屬於單一個人。</p>
+    <p class="body">Jensen 不喜歡組織圖長得都一樣（「漢堡店、車廠的組織圖長得都同一個樣，這對我沒道理」）。他認為公司的架構應該反映它要<strong>產出什麼</strong>、它身處什麼環境。所以會議裡每個人都在聽，誰能貢獻就插話：「這在電力分配上行不通」「這在記憶體上行不通」。</p>
+    <p class="body">他的領導方式是<strong>長期塑造每個人的信念系統</strong>。等到他宣布「我們買 Mellanox」「全力投入深度學習」「推 Grok」那天，他其實已經鋪了兩年半的梗——所以員工的反應不是「這從哪冒出來的？」，而是<strong>「Jensen，你怎麼現在才講？」</strong>。而且他不只對內，GTC 的 keynote 同時在塑造整個產業夥伴的信念系統。</p>
+  </div>
+
+  <div class="rev">
+    <h2 style="margin-top:80px">那場差點<span class="thin">毀掉公司的賭注</span></h2>
+    <p class="body">最能說明這套思維的，是把 <strong>CUDA 放進 GeForce</strong> 的決定。當年這讓一個消費性產品的成本暴增 50%，吃光了公司全部的毛利——而 NVIDIA 當時只是一家 <strong>35% 毛利</strong>的公司。市值從約六、七十億美元一路掉到 <strong>15 億美元</strong>，在谷底待了好一陣子。</p>
+    <p class="body">但他賭的是<strong>安裝基數（install base）</strong>：把 CUDA 塞進每一台 PC、養出開發者，總有一天會發生不得了的事。「NVIDIA 是 GeForce 蓋出來的房子」——研究員、科學家就是在 GeForce 上發現了 CUDA。這個賭注花了整整十年才回本，最後成了整場深度學習革命的地基。</p>
+    <div class="callout c"><p><strong>方法論：</strong>他先用好奇心驅動，再用一套推理系統說服自己「這個未來一定會發生」。一旦在腦中相信了，那個未來就清楚到不可能不成真——「中間會有很多痛苦，但你得相信你所相信的」。</p></div>
+  </div>
+</div></section>
+
+<!-- ════════ 03 · 四條 scaling law ════════ -->
+<section id="scaling"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">03</span> Scaling Laws</div>
+    <h2>現在有<span class="thin">四條 scaling law</span></h2>
+    <p class="lede">Jensen 仍是 scaling law 的信徒，而且「現在 scaling law 更多了」。他把它拆成四條，並反駁了「資料用完、預訓練結束」的恐慌。</p>
+    <div class="bento2">
+      <div class="card"><span class="ico">01 · Pre-training</span><h3>預訓練</h3><p>他不同意 Ilya Sutskever 的「pre-training 結束了」。<b>愈來愈多資料會是合成的</b>——其實人類彼此教學的資料本來大多就是合成的。訓練最終會被<b>運算</b>、而不是資料限制。</p></div>
+      <div class="card"><span class="ico">02 · Post-training</span><h3>後訓練</h3><p>AI 拿 ground truth 去<b>增強、再生、合成</b>出大量資料。人類產生的資料占比會愈來愈小，這條持續 scale。</p></div>
+      <div class="card"><span class="ico">03 · Test-time</span><h3>測試期推理</h3><p>曾有人說 inference 很簡單、會被便宜小晶片商品化。Jensen 從不信——因為 <b>inference 就是思考</b>，思考是規劃、搜尋、推理，極度吃運算。</p></div>
+      <div class="card"><span class="ico">04 · Agentic</span><h3>代理式</h3><p>一個 agent 會 spawn 出一大堆 sub-agent，等於在<b>乘法放大 AI</b>。「擴張 NVIDIA（多雇人）比擴張我自己容易多了。」</p></div>
+    </div>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">"Inference is thinking, and I think thinking is hard. <b>Thinking is way harder than reading.</b>"</div>
+    <div class="who">Jensen Huang · 為什麼 inference 不會被商品化</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">這四條會形成一個迴圈：代理系統產生的好經驗被記下來，回流到預訓練去記憶與泛化，再經後訓練微調、測試期增強，循環不止。<strong>歸根到底，智慧只會靠一件事 scale——運算。</strong></p>
+    <p class="body">難在硬體得<strong>提前兩三年押注</strong>：AI 模型架構大約每六個月翻新一次，系統與硬體架構卻三年才一代。這就是為什麼 Vera Rubin 機架和上一代 Grace Blackwell 結構完全不同——上一代為 <span class="gl" data-d="MoE：Mixture of Experts，混合專家模型。把模型拆成多個「專家」子網路，每次只啟動一部分，藉稀疏性放大參數量而不等比放大運算。">MoE</span> LLM inference 而設計，新一代為「會用工具的 agent」而設計。而這個設計，<strong>必須在 Claude Code、Codex、OpenClaw 出現之前就完成</strong>。Jensen 說：這不靠通靈，靠的是坐下來、推理——他兩年前的 GTC 投影片，畫的就是今天 OpenClaw 的樣子。</p>
+    <div class="callout"><p><strong>安全那一筆：</strong>NVIDIA 端出 NemoClaw／OpenShell。原則是「三選二」——agentic 系統可以①存取敏感資訊、②執行程式碼、③對外通訊，任何時刻最多只給其中兩項，不給齊三項，再接上企業既有的權限與政策引擎。</p></div>
+  </div>
+</div></section>
+
+<!-- ════════ 04 · token 工廠 / $10T ════════ -->
+<section id="factory"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">04</span> The Token Factory</div>
+    <h2>從倉庫，<span class="thin">變成工廠</span></h2>
+    <p class="lede">「NVIDIA 會不會有一天值 10 兆美元？」Jensen 的回答不是數字，而是兩個技術上的根本轉變——它們讓他覺得 NVIDIA 的成長「極可能、甚至必然」。</p>
+    <p class="body">第一，運算的<strong>本質</strong>變了。過去電腦是<strong>檢索系統</strong>：人先寫好、錄好、畫好，放進檔案，再用推薦系統挑給你看——本質是個倉庫。現在 AI 電腦是<strong>情境感知的生成系統</strong>，必須即時處理與生成 token。「倉庫不太賺錢；工廠則直接對應公司的營收。」電腦的目的從儲存，變成了<strong>生產</strong>。</p>
+    <p class="body">第二，這座工廠產出的 token，<strong>本身就有價值、而且開始像 iPhone 一樣分級</strong>：免費 token、premium token、中間還有好幾級。「有人願意為一百萬個 token 付 1,000 美元——這不是 if，是 when。」當產品有價、又能生利潤，問題就變成：世界需要幾座這樣的工廠？社會願意為 token 付多少？</p>
+  </div>
+
+  <div class="rev">
+    <p class="body">他把成長框成一連串<strong>「他們說不可能」</strong>的里程碑：</p>
+    <div class="tl">
+      <div class="tl-row"><div class="tl-when">早年</div><div class="tl-what"><b class="num">$1B</b><span>有 CEO 告訴他：無廠半導體公司理論上不可能超過 10 億美元。</span></div></div>
+      <div class="tl-row"><div class="tl-when">後來</div><div class="tl-what"><b class="num">$25B</b><span>又有人說，因為某家公司的存在，你不會超過 250 億美元。</span></div></div>
+      <div class="tl-row"><div class="tl-when">就快了</div><div class="tl-what"><b class="num">$1,000</b><span>每百萬 token 的價碼——「不是 if，是 when」。</span></div></div>
+      <div class="tl-row"><div class="tl-when">可預見的未來</div><div class="tl-what"><b class="num">$3T</b><span>營收規模。他說沒有任何物理極限擋著；供應鏈的負擔由 200 家公司分攤。</span></div></div>
+    </div>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">"It's hard for people to imagine how large we could be because <b>there's nobody I could take share from</b>."</div>
+    <div class="who">Jensen Huang · 為什麼最大的限制是想像力</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">這是最難被理解的一點：NVIDIA <strong>不在搶市佔的賽道上</strong>。一家 100 億的公司若想變大，股東很容易想像「多拿 10% 市佔就好」；但 Jensen 描述的那個市場<strong>還不存在</strong>，沒有人可以被他搶。他相信全球 GDP 會加速成長、其中用於運算的比例會是過去的 <strong>100 倍</strong>——因為電腦不再是儲存單元，而是產品生成單元。而那個被他稱作「token 的 iPhone 時刻」的東西，就是 <strong>agent</strong>：史上成長最快的應用，「一路直線往上」。</p>
+  </div>
+</div></section>
+
+<!-- ════════ 05 · 電力、供應鏈、Elon ════════ -->
+<section id="power"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">05</span> Power · Supply Chain · Elon</div>
+    <h2>真正的瓶頸<span class="thin">是電力</span></h2>
+    <p class="lede">問到讓他睡不著的阻礙，他說是電力——但 NVIDIA 的對策是把每瓦每秒的 token 數每年往上推一個數量級。過去十年，整體運算 scale 了一百萬倍，遠超 Moore's Law 的一百倍。</p>
+    <p class="body">至於從哪「生」出更多電，他提出一個很少人談的觀點：<strong>電網是為最糟情況設計的</strong>——但最糟情況一年只有冬夏那幾天的極端天氣。99% 的時間，電網都跑在大約六成尖峰、有大量過剩容量閒置。他想用的，就是這些閒著的電。</p>
+    <p class="body">這需要三方一起改：①<strong>終端客戶</strong>別再對什麼都要求「六個九」的可用度；②<strong>資料中心</strong>要能優雅降級——電網說「先把你降到 80%」，那就把工作負載搬走、算慢一點、延遲長一點，但資料絕不遺失；③<strong>電力公司</strong>提供分級的供電承諾，「願意接受這種等級保證的，我下個月就能給你電、用這個價格。」</p>
+  </div>
+
+  <div class="rev">
+    <h2 style="margin-top:80px">Elon 的<span class="thin">急迫感</span></h2>
+    <p class="body">他盛讚 Elon 在 Memphis <strong>四個月</strong>蓋出 Colossus（現已達 <strong>20 萬顆 GPU</strong>）。關鍵不是魔法，是 Elon 對每件事都問三個問題：<strong>這必要嗎？一定要這樣做嗎？一定要這麼久嗎？</strong>——把每件事削到不能再削，但產品該有的能力一個不少。而且他<strong>親臨現場</strong>：Jensen 親眼看過他跟工程師一起研究「一條一條把線插進機架」的流程，只為了讓它更不容易出錯。當 CEO 親自用這種急迫感行動，整條供應鏈就會把他的案子擺第一。</p>
+    <div class="chart">
+      <div class="ct">Speed of Light</div>
+      <div class="cs">與其優化，不如歸零重問一次</div>
+      <div class="bars">
+        <div class="bar-row"><div class="bar-lab"><b>現狀</b>今天的做法</div><div class="bar-track"><div class="bar-fill bf-3" data-w="100"><span class="v">74 天</span></div></div></div>
+        <div class="bar-row"><div class="bar-lab"><b>持續改進</b>他討厭的對話</div><div class="bar-track"><div class="bar-fill bf-2" data-w="97"><span class="v">72 天</span></div></div></div>
+        <div class="bar-row"><div class="bar-lab"><b>從零重建</b>speed of light</div><div class="bar-track"><div class="bar-fill bf-1 out" data-w="8"><span class="v">6 天</span></div></div></div>
+      </div>
+      <div class="cap">Jensen 用了 30 年的「光速」心態：先問物理極限，再往回推。他舉的例子——與其把 74 天優化成 72 天，他寧願歸零問「從頭蓋要幾天」，答案常是 6 天。74 與 6 之間的對話，比 74 與 72 有效得多。（天數為他口述的示意例子。）</div>
+    </div>
+    <div class="callout"><p><strong>供應鏈為什麼不擔心：</strong>被問到 ASML 的 EUV、TSMC 的 CoWoS 先進封裝、SK Hynix 的 HBM 會不會卡住，他只說了一句——「我告訴他們我需要什麼，他們懂了，他們告訴我會怎麼做，我相信他們。」三年前他還說服了幾家記憶體 CEO，把當時冷門的 HBM、和原本給手機用的低功耗記憶體，押注成資料中心的主流。</p></div>
+  </div>
+</div></section>
+
+<!-- ════════ 06 · 中國、TSMC、開源 ════════ -->
+<section id="geo"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">06</span> China · TSMC · Open Source</div>
+    <h2>製造與信任<span class="thin">的地理學</span></h2>
+    <p class="lede">他剛從中國回來，把觀察直接講了出來：這是當今世界創新最快的國家——而原因和「家人 &gt; 朋友 &gt; 公司」的文化有關。</p>
+    <div class="bento">
+      <div class="card"><span class="ico">China</span><h3>為什麼這麼快</h3><p>全球 <b>50% 的 AI 研究員是華人</b>、多數仍在中國；科技業生在「行動＋雲」時代，天生懂軟體；省與市的市長彼此瘋狂競爭，所以什麼公司都冒出一堆，內部競爭極殘酷。</p></div>
+      <div class="card"><span class="ico">Open Source</span><h3>所以擅長開源</h3><p>文化是<b>家人第一、朋友第二、公司第三</b>。工程師的兄弟、同學都在對手公司，資訊本來就高速流通——「那還保護什麼？乾脆放上開源。」開源社群再回頭放大創新。</p></div>
+      <div class="card"><span class="ico">TSMC</span><h3>最深的誤解</h3><p>以為台積電「只贏在技術」。真正厲害的是<b>同時</b>做到技術領先、又能在高良率高產出下服務上百家動態變動的客戶——再加上一個無形資產：<b>信任</b>。</p></div>
+    </div>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">Three decades, ... hundreds of billions of dollars of business we've done through them, <b>and we don't have a contract.</b></div>
+    <div class="who">Jensen Huang · 談 NVIDIA 與 TSMC</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">2013 年，台積電創辦人張忠謀曾邀他接任 TSMC 執行長。他婉拒了——不是因為不夠誘人，而是他在心裡已經看見 NVIDIA 會成為什麼。「現在我可以同時幫到兩家公司。」</p>
+    <p class="body">至於 NVIDIA 為何開源（剛真開源了 1,200 億參數的 <strong>Nemotron 3 Super</strong>，連權重、資料、製作方法一起放出）——他給了三個理由：①要做好協同設計，就得理解模型怎麼演化，所以 Nemotron 3 不是純 transformer，而是混了 <span class="gl" data-d="SSM：State Space Model，狀態空間模型。一種以線性狀態遞迴處理序列的架構，長序列上比注意力機制更省運算，常與 transformer 混搭。">SSM</span>；②若一切都專有，AI 無法擴散到每個產業、國家、研究員；③AI 不只是語言——生物、化學、物理、氣象都得被推到前沿。「我們不造車，但要確保每家車廠都有好模型；我們不研發藥，但要確保 Lilly 有全世界最好的生物 AI。」</p>
+  </div>
+</div></section>
+
+<!-- ════════ 07 · 護城河 ════════ -->
+<section id="moat"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">07</span> The Moat</div>
+    <h2>護城河不是技術，<span class="thin">是安裝基數</span></h2>
+    <p class="lede">被問到 NVIDIA 最大的護城河，他的答案很乾脆：CUDA 的安裝基數。就算有人做出「GUDA」或「TUDA」也沒用——因為這從來就不只是技術。</p>
+    <p class="body">x86 被批評了無數次，卻是今天定義性的架構；許多被頂尖科學家設計得無比優雅的 RISC 架構反而失敗了。<strong>安裝基數定義架構，其他都是次要。</strong>而 CUDA 的安裝基數，再乘上 NVIDIA「一年一代、複雜到沒有公司做過」的執行速度，就成了開發者腦中的算式：今天押注 CUDA，平均等六個月它就快十倍；我同時觸及每一朵雲、每一家電腦公司、每一個產業、每一個國家；而且我 100% 相信 NVIDIA 會把 CUDA 維護下去。</p>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">"It wasn't three people that made CUDA successful. <b>It was 43,000 people</b> that made CUDA successful."</div>
+    <div class="who">Jensen Huang · 護城河的真正組成</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">第二條護城河是<strong>生態系</strong>：同一個架構同時在 Google Cloud、AWS、Azure、CoreWeave，在企業電腦、無線基地台、車子、機器人、衛星、甚至太空裡跑。而他心中「運算的單位」也一路放大——從晶片，到電腦，到叢集，到<strong>整座 AI 工廠</strong>。下一個刻度，他說，是「行星規模」。</p>
+    <div class="callout"><p><strong>太空那一段：</strong>NVIDIA 的 GPU 已經是<strong>第一批上太空的 GPU</strong>，用來在衛星邊緣即時處理高解析影像（資料量太大，不可能全傳回地球）。但問到太空運算還要多久，他很務實：「我先找下一桶機會在哪。地球上有太多閒置的電可以先用掉——那才是低垂的果實。」</p></div>
+  </div>
+</div></section>
+
+<!-- ════════ 08 · 工作的未來 ════════ -->
+<section id="work"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">08</span> Future of Work</div>
+    <h2>你工作的<span class="thin">目的，和任務不一樣</span></h2>
+    <p class="lede">對擔心被 AI 取代的人，他給了一個關鍵框架，再配上一個真實故事。</p>
+    <p class="body"><strong>放射科醫師的故事：</strong>2019、2020 年電腦視覺就達到超人水準了，AI 包辦了掃描分析——當年大家預測放射科醫師會消失。預測「電腦視覺超人」這件事完全正確，<strong>放射科醫師的數量卻不減反增</strong>，今天甚至短缺。為什麼？因為他們的<strong>目的是診斷疾病</strong>，不是「讀掃描」這個動作本身。掃描看得更快，就能看更多病人、診斷更好、醫院賺更多——於是需要更多放射科醫師。那聲「這行要消失了」的警告反而嚇跑了人、造成傷害。</p>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">"The purpose of your job and the tasks and tools that you use to do your job <b>are related, not the same</b>."</div>
+    <div class="who">Jensen Huang · 34 年來工具一直變，目的沒變</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">同理，NVIDIA 的軟體工程師只會增加。「我要的是他們解決問題，從不在乎他們寫了幾行程式。」而「寫程式」的定義，他說，今天其實就是<strong>寫規格（specification）</strong>——能描述規格、告訴電腦要蓋什麼的人，<strong>已經從 3,000 萬暴增到大約 10 億</strong>。未來每個木匠都會是會寫程式的人，而有了 AI 的木匠同時是建築師，他能交付的價值整個被抬高。<strong>「寫規格就是寫程式。」</strong></p>
+    <div class="callout c"><p><strong>他給的具體建議：</strong>如果要在「完全不懂 AI」和「精通用 AI」的兩個新鮮人之間選一個，他一定選後者——會計、行銷、業務、律師、農夫、藥師都一樣。若你的工作<strong>等於</strong>那些任務，會被取代；若工作的目的<strong>包含你這個人</strong>，那就去學會用 AI 把任務自動化。而最好的入門方式，就是直接問 AI：「我擔心我的工作，我該學哪些技能、第一步怎麼走？」它就是個隨時在線的人生教練。</p></div>
+  </div>
+</div></section>
+
+<!-- ════════ 09 · 智慧、人性、生死 ════════ -->
+<section id="humanity"><div class="wrap">
+  <div class="rev">
+    <div class="label"><span class="n">09</span> Intelligence · Humanity · Mortality</div>
+    <h2>智慧會被商品化，<span class="thin">該捧高的是人性</span></h2>
+    <p class="lede">他不浪漫化「智慧」這個詞。智慧是個功能：感知、理解、推理、規劃，這個迴圈就是智慧的全部——它不等於人性。</p>
+    <p class="body">他說自己身邊 60 個直屬主管，<strong>每一個在各自領域都比他聰明</strong>、學歷更好、鑽得更深，「對我來說他們都是超人」。可他坐在這 60 個超人中間做編排。「一個洗碗工憑什麼坐在超人中間？」——他的重點是：<strong>智慧是商品，人性不是。</strong>我們的容忍痛苦的能力、決心、品格，是另一組詞。</p>
+  </div>
+
+  <div class="pull rev">
+    <div class="q">Intelligence is a commodity. ... <b>The word we should really elevate is humanity.</b></div>
+    <div class="who">Jensen Huang · 關於什麼會被商品化、什麼不會</div>
+  </div>
+
+  <div class="rev">
+    <p class="body">至於晶片會不會有意識？「我不知道晶片會不會緊張。」他相信 AI 能<strong>辨識</strong>並理解情緒，但他的晶片不會去<strong>感受</strong>它們。同樣的處境下不同的人會交出截然不同的表現——那不是因為晶片「感覺不同」。所以該被高舉的是同情、慷慨、品格，「我相信那些是超人的力量」。AI 該是讓人類更強大的工具，讓我們更懂得頌揚人。</p>
+    <p class="body">這套思維連他面對<strong>死亡</strong>都一樣。他直說「我真的不想死」，也famously不相信接班計畫——因為若你真在乎公司在你之後的未來，今天最該做的，是<strong>不斷把知識、洞見、經驗傳給別人</strong>。所以他每一場會議都是「推理會議」，學到任何東西在桌上停留不超過一瞬間就轉手出去。他希望自己<strong>死在工作上、最好還是瞬間</strong>，沒有漫長的受苦。</p>
+    <div class="callout"><p><strong>他對未來最浪漫的期待：</strong>疾病的終結、污染大幅減少都是合理可期的；理解「生物這台機器」大概只要五年。而最異想天開的一段——他打算先把一個人形機器人送上太空船，讓它邊飛邊自我升級；等時候到了，他大半生已上傳到網路的意識（收件匣、說過做過的一切，匯成他的 AI），就用光速送出去，追上那台機器人。</p></div>
+  </div>
+</div></section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer><div class="wrap rev">
+  <div class="big">「<b>預測未來最好的方法，就是創造它。</b>」<small>— Alan Kay，本集收尾引言</small></div>
+  <div class="meta">
+    Lex Fridman Podcast #494 · 2026.03.24<br>
+    Jensen Huang · Lex Fridman<br>
+    <a href="https://www.youtube.com/watch?v=vif8NQcjVf0" target="_blank" rel="noopener">youtube.com/watch?v=vif8NQcjVf0</a> · lexfridman.com/jensen-huang-transcript
+  </div>
+  <p class="disc">本頁為這集對話的重點整理，數字與引述取自該集內容，屬講者本人的觀點與預測，非投資建議。圖表為示意比例，用於傳達量級關係；引號內為原話逐字，中文為脈絡說明。</p>
+</div></footer>
+
+<script>
+/* ── 全站標準 JS（每個 note 檔頁尾都複製這段） ── */
+// nav 捲動加底線
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+
+// 進場 reveal + 圖表生長（涵蓋所有資料元件的 data-* 觸發）
+function grow(el){
+  el.querySelectorAll('.bar-fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.sg[data-w]').forEach(b=>b.style.width=(parseFloat(b.dataset.w)/2)+'%'); // 零軸發散：半幅
+  el.querySelectorAll('.b[data-h]').forEach(b=>b.style.height=b.dataset.h+'%');
+  el.querySelectorAll('.split>div[data-flex]').forEach(s=>s.style.flex=s.dataset.flex);
+}
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(!e.isIntersecting)return;
+    e.target.classList.add('in'); grow(e.target); io.unobserve(e.target); });
+},{threshold:.14});
+document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+
+// glossary：手機點擊切換
+document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
+  e.stopPropagation();
+  const open=el.classList.contains('open');
+  document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open'));
+  if(!open)el.classList.add('open');
+}));
+document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+
+// theme toggle（初始主題由 <head> inline script 設定，避免 FOUC）
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>

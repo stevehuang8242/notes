@@ -105,6 +105,14 @@ nav .links a:hover{color:var(--ink)}
 .hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
 .hero .sub b{color:var(--ink);font-weight:500}
 .hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+/* 主線預告（hero 尾段）：lead 標 + 編號 chips，預告骨幹、兼作頁內錨點；取代純跳轉 CTA。nav 仍是完整 TOC。 */
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
 
 /* SECTION · label · 文字 */
 section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
@@ -265,6 +273,12 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
   </div>
   <h1>一邊造出<span class="hl">兆萬富翁</span>，<br><span class="thin">另一邊把旗艦模型<br>搞到被政府</span>下架。</h1>
   <p class="sub">同一週，SpaceX 破兆 IPO 讓 Elon 成為全球第一個 <b>兆萬富翁</b>；而 Anthropic 的 <b>Fable</b> 被白宮逼到對所有人關閉。外加開場的「新寡頭與習得性無助」，與收尾的伊朗和平備忘錄。</p>
+  <div class="spine">
+    <span class="sk">本集焦點</span>
+    <a class="si" href="#spacex"><span class="sn">01</span> 兆萬富翁</a>
+    <a class="si" href="#fable"><span class="sn">02</span> Fable 被下架</a>
+    <a class="si" href="#oligarchs"><span class="sn">03</span> 新寡頭</a>
+  </div>
 </div></header>
 
 <!-- ============ 00 · OVERVIEW ============ -->

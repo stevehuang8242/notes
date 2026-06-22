@@ -119,6 +119,14 @@ nav .links a:hover{color:var(--ink)}
 .hero .sub b{color:var(--ink);font-weight:500}
 .hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
 .hero .cta{margin-top:40px;display:flex;gap:18px;flex-wrap:wrap}
+/* 主線預告（hero 尾段）：lead 標 + 編號 chips，預告骨幹、兼作頁內錨點；取代純跳轉 CTA。nav 仍是完整 TOC。 */
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
 
 /* ---------- section ---------- */
 section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
@@ -264,6 +272,12 @@ footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;ma
   </div>
   <h1>當 SpaceX 偷偷<br><span class="thin">蓋了一座 <span class="xline">AWS</span></span></h1>
   <p class="sub">拆解 1.77 兆美元的 SpaceX IPO、Fable 5 模型競賽，以及那道讓人睡不著的算式：1.5 兆資本支出，對上 3,000 億 AI 營收。</p>
+  <div class="spine">
+    <span class="sk">三條主線</span>
+    <a class="si" href="#compute"><span class="sn">01</span> 偷蓋一座 AWS</a>
+    <a class="si" href="#models"><span class="sn">02</span> Fable 5 競賽</a>
+    <a class="si" href="#market"><span class="sn">03</span> 1.5兆 vs 3,000億</a>
+  </div>
 </div></header>
 
 <!-- ============ THESIS ============ -->
