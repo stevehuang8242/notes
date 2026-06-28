@@ -298,7 +298,7 @@ td.pos{color:var(--pos)} td.neg{color:var(--neg)}
 ### 6.9 Glossary tooltip（內頁）
 `.gl` 虛線底。**桌機 hover `::after` 浮層；手機（`max-width:760px`）改用 body 層的置中彈窗 `.gl-pop` + `.gl-backdrop`（JS 動態建立、點背景／✕／Esc 關閉）——`::after` 浮層在窄螢幕會被 `overflow:hidden` 的 hero 或螢幕邊緣裁切，故手機一律走彈窗。** 桌機浮層底色須 token 化：
 ```css
-.gl{border-bottom:1px dotted var(--line)}                  /* ← was rgba(255,255,255,.55) */
+.gl{border-bottom:1px dotted var(--line);cursor:pointer}   /* ← was rgba(255,255,255,.55)；cursor 用 pointer，不要 cursor:help（hover 會出現問號游標） */
 .gl::after{background:var(--surface);border:1px solid var(--line);color:var(--ink2);
   box-shadow:0 16px 44px rgba(0,0,0,.45)}                  /* 陰影淺色下自然變淡 */
 ```
