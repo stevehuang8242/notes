@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All-In 278 · 社會主義橫掃紐約、中國 AI 追平、記憶體荒、兆元 IPO</title>
+
+<!-- 首頁列表中繼資料（build-index.js 讀取） -->
+<meta name="note:src" content="All-In">
+<meta name="note:date" content="2026.06.27">
+<meta name="note:title" content="社會主義橫掃紐約，中國 AI 追平前沿，記憶體荒撞上兆元 IPO 潮">
+<meta name="note:dek" content="Mamdani 加持的社會主義者三戰全勝、DSA 接管民主黨；中國 GLM 5.2 追上前沿模型；DRAM 荒逼 Apple 漲價；Anthropic 估值喊到 3 兆。">
+<meta name="note:people" content="Jason · Chamath · David Sacks · Gavin Baker · Travis Kalanick">
+
+<!-- FOUC 防呆：繪製前先定主題 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════ 1 · TOKENS ════ */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --track:rgba(255,255,255,.06);
+  --accent:#9db7d8;
+  --mark:rgba(157,183,216,.28);
+  --pos:#37d6ad;
+  --neg:#ff5a4d;
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
+  --gl-bg:#15161b;
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+  --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+
+/* ── base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.up{text-transform:uppercase;letter-spacing:.22em}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* ════ NAV + theme toggle ════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:30px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* ════ HERO（靠左 ticker） ════ */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none}
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.28;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 .hl{color:var(--accent)}
+.hero h1 u{text-decoration:none;color:var(--pos)}
+.hero h1 .xline{display:inline-block;border-bottom:3px solid var(--ink);padding-bottom:2px;line-height:1}
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:760px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+.hero .sub .c{color:var(--pos);font-weight:500} .hero .sub .b{color:var(--neg);font-weight:500}
+.hero .spine{margin-top:42px;display:flex;align-items:center;gap:14px 16px;flex-wrap:wrap}
+.spine .sk{font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--ink3);display:inline-flex;align-items:center;gap:12px}
+.spine .sk::after{content:"";width:26px;height:1px;background:var(--line)}
+.spine .si{display:inline-flex;align-items:baseline;gap:9px;font-size:14px;font-weight:500;color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:9px 16px;transition:background .25s,color .25s,border-color .25s}
+.spine .si .sn{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.spine .si:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spine .si:hover .sn{color:var(--bg)}
+
+/* ════ SECTION · label · 文字 ════ */
+section{padding:110px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em}
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.08;letter-spacing:.01em;margin-bottom:20px}
+h2 .thin{font-weight:300}
+.lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:760px}
+p.body{font-size:18px;font-weight:300;line-height:1.7;color:var(--ink2);max-width:760px;margin-top:26px}
+p.body strong{color:var(--ink);font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;
+  border:1px solid var(--line);border-radius:2px;padding:2px 9px;margin:0 3px;vertical-align:2px;color:var(--ink)}
+.who{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);margin-top:30px}
+
+/* ════ PULL-QUOTE ════ */
+.pull{padding:60px 0 48px;text-align:center}
+.pull .q{font-size:clamp(24px,3.6vw,40px);font-weight:300;line-height:1.34;letter-spacing:.005em;max-width:920px;margin:0 auto}
+.pull .q b{font-weight:600}
+.pull .who{margin-top:30px}
+
+/* ════ BIG NUMBERS ════ */
+.bignums{display:grid;grid-template-columns:repeat(4,1fr);margin-top:20px;border-top:1px solid var(--line)}
+.bignum{padding:38px 26px 34px;border-right:1px solid var(--hair)}
+.bignum:last-child{border-right:none}
+.bignum .v{font-size:clamp(40px,5.6vw,66px);font-weight:500;line-height:1;letter-spacing:.005em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bignum .v small{font-size:.5em;font-weight:500;color:var(--ink2);margin-left:5px;letter-spacing:.02em}
+.bignum .l{font-size:14px;font-weight:300;color:var(--ink2);margin-top:18px;line-height:1.5}
+@media(max-width:760px){.bignums{grid-template-columns:1fr 1fr}.bignum{border-bottom:1px solid var(--hair)}.bignum:nth-child(2){border-right:none}}
+
+/* ════ METRIC STRIP ════ */
+.strip{margin-top:30px;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cell{background:var(--surface);padding:20px 18px}
+.cell .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cell .v{font-size:26px;font-weight:500;margin-top:10px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .n{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.4}
+@media(max-width:760px){.strip{grid-template-columns:repeat(2,1fr)}}
+
+/* ════ BENTO ════ */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bento2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.card{background:var(--surface);padding:40px 34px}
+.card .ico{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);display:block;margin-bottom:22px}
+.card h3{font-size:23px;font-weight:600;letter-spacing:.01em;margin-bottom:14px}
+.card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.card p b{color:var(--ink);font-weight:500}
+.card .stat{font-size:50px;font-weight:500;line-height:1;letter-spacing:.005em;margin-bottom:20px;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.bento,.bento2{grid-template-columns:1fr}}
+
+/* ════ 橫條圖 ════ */
+.chart{border:1px solid var(--line);margin-top:30px;padding:42px 42px 36px}
+.chart .ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.22em;color:var(--ink3);margin-bottom:8px}
+.chart .cs{font-size:23px;font-weight:500;letter-spacing:.01em;margin-bottom:38px}
+.bars{display:flex;flex-direction:column;gap:1px;background:var(--hair)}
+.bar-row{display:grid;grid-template-columns:160px 1fr;align-items:stretch;background:var(--surface)}
+.bar-lab{font-size:13px;font-weight:300;color:var(--ink2);display:flex;flex-direction:column;justify-content:center;
+  align-items:flex-end;text-align:right;padding:0 22px 0 0;letter-spacing:.02em}
+.bar-lab b{color:var(--ink);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;margin-bottom:3px}
+.bar-track{position:relative;height:48px;background:var(--track);overflow:hidden}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;width:0;transition:width 1.3s cubic-bezier(.25,1,.4,1);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:16px}
+.bar-fill .v{font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.bf-1{background:var(--bar-1)} .bf-2{background:var(--bar-2)} .bf-3{background:var(--bar-3)}
+.bf-1 .v{color:var(--bar-1-ink)} .bf-2 .v{color:var(--bar-2-ink)} .bf-3 .v{color:var(--bar-3-ink)}
+.bar-fill.out{overflow:visible;padding-right:0}
+.bar-fill.out .v{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);color:var(--ink)}
+.cap{font-size:13px;font-weight:300;color:var(--ink3);margin-top:30px;line-height:1.65;max-width:760px}
+@media(max-width:760px){.chart{padding:28px 22px}.bar-row{grid-template-columns:108px 1fr}.bar-lab{padding-right:14px}}
+
+/* ════ SPLIT ════ */
+.split{display:flex;height:60px;overflow:hidden;margin:8px 0 4px;background:var(--hair);gap:1px}
+.split>div{display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12.5px;flex:0;
+  transition:flex 1s cubic-bezier(.25,1,.4,1);text-transform:uppercase;letter-spacing:.1em;
+  font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;white-space:nowrap}
+.s-front{background:var(--ink);color:var(--bg)} .s-open{background:var(--bar-3);color:var(--ink)}
+.split-lab{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink3);margin:24px 0 10px}
+
+/* ════ BULL / BEAR ════ */
+.bb{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bbc{background:var(--surface);padding:32px 30px}
+.bbc .h{font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;color:var(--ink3)}
+.bbc p{font-size:16px;font-weight:300;line-height:1.62;color:var(--ink2)}
+.bbc p strong{color:var(--ink);font-weight:500}
+@media(max-width:760px){.bb{grid-template-columns:1fr}}
+
+/* ════ CALLOUT ════ */
+.callout{border:1px solid var(--line);border-left:3px solid var(--ink);padding:24px 26px;margin-top:30px}
+.callout.c{border-left-color:var(--pos)} .callout.b{border-left-color:var(--neg)}
+.callout p{font-size:17px;font-weight:300;line-height:1.65;color:var(--ink2)}
+.callout p strong{color:var(--ink);font-weight:500}
+
+/* ════ GLOSSARY ════ */
+.gl{border-bottom:1px dotted var(--line);cursor:pointer;position:relative}
+.gl::after{content:attr(data-d);position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(5px);
+  width:max-content;max-width:min(330px,82vw);background:var(--gl-bg);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;font-family:var(--sf);font-size:13.5px;font-weight:300;line-height:1.6;letter-spacing:.01em;
+  color:var(--ink2);text-transform:none;text-align:left;white-space:normal;
+  opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease;z-index:80;pointer-events:none;
+  box-shadow:0 16px 44px rgba(0,0,0,.45)}
+.gl:hover::after,.gl.open::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+@media(max-width:760px){.gl::after{display:none}.gl{cursor:pointer}}
+.gl-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;z-index:200}
+.gl-backdrop.open{opacity:1;visibility:visible}
+.gl-pop{position:fixed;left:50%;top:50%;z-index:201;width:min(420px,calc(100vw - 40px));background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 22px;box-shadow:0 24px 60px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translate(-50%,-50%) scale(.94);transition:opacity .2s ease,transform .2s cubic-bezier(.22,1,.36,1),visibility .2s ease;max-height:80vh;overflow-y:auto}
+.gl-pop.open{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+.gl-pop .gh{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.gl-pop .gt{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:.01em;line-height:1.4}
+.gl-pop .gx{flex:none;width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink2);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;cursor:pointer}
+.gl-pop .gd{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2);letter-spacing:.01em}
+@media(prefers-reduced-motion:reduce){.gl-pop,.gl-backdrop{transition:none}}
+
+/* ════ RISK / 列表 GRID ════ */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.gcard{background:var(--surface);padding:28px 26px}
+.gcard .rt{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gcard .rt .d{width:7px;height:7px;border-radius:50%;background:var(--neg);flex:none}
+.gcard p{font-size:14.5px;font-weight:300;color:var(--ink2);line-height:1.62}
+.gcard .fig{color:var(--neg);font-weight:500;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+
+/* ════ TIMELINE ════ */
+.tl{margin-top:30px;border-top:1px solid var(--line)}
+.tl-row{display:grid;grid-template-columns:180px 1fr;gap:30px;padding:30px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.tl-when{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2)}
+.tl-what b{font-size:44px;font-weight:500;letter-spacing:.005em;margin-right:18px;font-variant-numeric:tabular-nums}
+.tl-what span{font-size:16px;font-weight:300;color:var(--ink2)}
+@media(max-width:760px){.tl-row{grid-template-columns:110px 1fr;gap:16px}.tl-what b{font-size:32px}}
+
+/* ════ FOOTER ════ */
+footer{border-top:1px solid var(--line);padding:80px 0 70px;text-align:center}
+footer .big{font-size:clamp(24px,3.4vw,38px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:820px;margin:0 auto 36px}
+footer .big b{font-weight:600}
+footer .big small{display:block;font-size:.5em;color:var(--ink3);margin-top:18px;font-weight:300}
+footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
+footer .meta a{color:var(--ink2);text-transform:none;letter-spacing:.02em}
+footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:680px;margin:30px auto 0;line-height:1.7}
+
+/* ════ 動效 ════ */
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev,.fill,.sg,.bar-fill,.b,.split>div{transition:none!important;opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">All-In · 2026.06.27</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#numbers">Overview</a>
+      <a href="#nyc">紐約</a>
+      <a href="#dems">民主黨</a>
+      <a href="#china">中國 AI</a>
+      <a href="#micron">記憶體</a>
+      <a href="#space">太空</a>
+      <a href="#ipo">IPO</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- ════ HERO ════ -->
+<header class="hero"><div class="inner wrap">
+  <div class="ticker">
+    <span class="tk">ALL-IN POD</span>
+    <span class="mt">第 278 集 · 2026.06.27 · Jason · Chamath · Sacks · Gavin Baker · Travis Kalanick</span>
+  </div>
+  <h1>社會主義者<span class="hl">橫掃紐約</span>的同一週，<br><span class="thin">一個中國開源模型，<br>追到了前沿的</span>門口。</h1>
+  <p class="sub">Friedberg 請了「心理健康假」，留下 Jason、Chamath、Sacks 加兩位嘉賓 <b>Gavin Baker</b>、<b>Travis Kalanick</b>。從 <span class="gl" data-d="DSA（Democratic Socialists of America，美國民主社會主義者）：美國最大的社會主義組織，本身不是政黨，而是寄生在民主黨內、借民主黨票匭把自己人送進公職。高度組織化、動員力強，在低投票率初選特別能取勝。">DSA</span> 三戰全勝、<b>GLM 5.2</b> 追平前沿、DRAM 荒逼 Apple 漲價，一路講到 <b>Anthropic 估值 3 兆</b>的兆元 IPO 潮。</p>
+  <div class="spine">
+    <span class="sk">本集主線</span>
+    <a class="si" href="#nyc"><span class="sn">01</span> DSA 接管民主黨</a>
+    <a class="si" href="#china"><span class="sn">02</span> 中國開源追平前沿</a>
+    <a class="si" href="#micron"><span class="sn">03</span> 記憶體成最硬瓶頸</a>
+    <a class="si" href="#ipo"><span class="sn">04</span> 兆元 IPO 潮</a>
+  </div>
+</div></header>
+
+<!-- ════ 00 OVERVIEW ════ -->
+<section id="numbers"><div class="wrap rev">
+  <div class="label"><span class="n">00</span> By the Numbers</div>
+  <h2>一集裡的<span class="thin">六個量級</span></h2>
+  <p class="lede">政治、AI、半導體、資本市場——同一張桌子上，每個主題都丟出一個讓人坐直的數字。</p>
+  <div class="strip">
+    <div class="cell"><div class="k">DSA 橫掃機率</div><div class="v num">26%</div><div class="n">Polymarket 選前報價</div></div>
+    <div class="cell"><div class="k">GLM 5.2 智慧指數</div><div class="v num">51</div><div class="n">開源權重史上最高</div></div>
+    <div class="cell"><div class="k">Micron 營收</div><div class="v num pos">+4×</div><div class="n">$9B → $42B（YoY）</div></div>
+    <div class="cell"><div class="k">1GW 上太空</div><div class="v num">$40B</div><div class="n">vs 地面 $60B</div></div>
+    <div class="cell"><div class="k">Anthropic 估值</div><div class="v num">~$3T</div><div class="n">Gavin 認為今天該值</div></div>
+    <div class="cell"><div class="k">民主黨人不認同以色列</div><div class="v num">80%</div><div class="n">50 歲以下：57%</div></div>
+  </div>
+</div></section>
+
+<!-- ════ 01 NYC ════ -->
+<section id="nyc"><div class="wrap rev">
+  <div class="label"><span class="n">01</span> NYC · DSA 橫掃</div>
+  <h2>Mamdani 加持的社會主義者，<span class="thin">三戰全勝</span></h2>
+  <p class="lede">週二的紐約民主黨國會初選，市長 Zohran Mamdani 背書的三位候選人全數勝出。Polymarket 選前只給這次「橫掃」<strong>26%</strong> 的機率。</p>
+  <p class="body"><strong>第 10 選區</strong>（含西村等全市最富裕地段），Brad Lander 拉下連任兩屆的 Dan Goldman；<strong>第 13 選區</strong>（哈林／西布朗克斯），一位 32 歲、念了十年大學的 DSA 候選人，擊敗 Hakeem Jeffries 力挺、連任五屆、身兼國會西語裔黨團主席的 Adriano Espaillat；<strong>第 7 選區</strong>（DSA 大本營 Bushwick／Williamsburg），Claire Valdez 拿下開放席次。三場都是安全藍區，等於底定。Jason 點出共同點：這些勝選者跟 Mamdani 一樣，在<strong>年輕、高學歷、高收入</strong>族群表現特別好——「養得起自己去當社會主義者的人」。在約 <strong>17%</strong> 投票率的低強度初選裡，高度組織化的 DSA 正是最能取勝的玩家。</p>
+
+  <div class="pull">
+    <div class="q">我們只是把民主黨當成<b>上選票的載具</b>——不是因為認同它的目標。我們把建制派看成障礙，<b>不是歸宿</b>。</div>
+    <div class="who">DSA 共同主席 Josh Block · 由 Sacks 朗讀</div>
+  </div>
+
+  <p class="body">Sacks 逐條念出 DSA 的政綱，主張這是對美國憲政體制的徹底改造：</p>
+  <div class="grid2">
+    <div class="gcard"><div class="rt">廢除參議院與選舉人團</div><p>改行多黨制、比例代表、所有選舉採排序複選；擴大眾議院。</p></div>
+    <div class="gcard"><div class="rt">廢除「監禁國家」</div><p>裁撤警力與監獄、廢除 ICE 並全面特赦、不支持任何驅逐出境。</p></div>
+    <div class="gcard"><div class="rt">總統與最高法院聽命國會</div><p>把行政與司法改為由國會選出、從屬於國會。</p></div>
+    <div class="gcard"><div class="rt">企業公有化、釋放巴勒斯坦</div><p>主要企業收歸公有、裁撤國防部、free Palestine。</p></div>
+  </div>
+
+  <p class="body">Chamath 把這放進更大的框架：<strong>AI 才是這次選舉真正的公投。</strong>他認為 AI 是「我們這輩子會遇到、最偉大的經濟拉平器」，能把每個人的起跑線拉齊——但矽谷把它的品牌做得太爛，讓末日論、搶工作、耗水這些「謊言」填滿真空。在猶他與紐約的幾場關鍵戰，他形容是 <span class="gl" data-d="Anthropic 出資的反 AI 團體 vs 某種程度由 OpenAI 出資的挺 AI 團體——Chamath 的描述。">Anthropic 資助的反 AI 團體</span>對上挺 AI 團體，挺 AI 的一方「勉強守住」。但 Gavin 的判斷更尖銳：DSA 真正的引擎不是理念，而是 Mamdani 本人。</p>
+
+  <div class="callout"><p><strong>Gavin：</strong>Mamdani 是我這輩子見過<strong>最有天分的政治人物之一</strong>。不是他們的理念、也不是對 AI 的不滿讓 DSA 上升——是他這個人。他有 Obama 加 Trump 的魅力，接通了兩個「覺得會過得比父母差」的世代。</p></div>
+</div></section>
+
+<!-- ════ 02 DEMS / ISRAEL / SOCIAL MEDIA ════ -->
+<section id="dems"><div class="wrap rev">
+  <div class="label"><span class="n">02</span> 民主黨 · 以色列 · 社群媒體</div>
+  <h2>真相是社會的<span class="thin">免疫系統</span></h2>
+  <p class="lede">同一段對話裡，三條線交織：社會主義的下場、社群媒體禁令的真實代價，以及以色列如何變成民主黨初選的高壓電。</p>
+
+  <p class="body">Chamath 提出一個對照：加拿大、英國、澳洲在美國之前就大幅倒向社會主義，結果是「徹底的災難」、政治極度不穩——但這三國近期都<strong>禁止 16 歲以下使用社群媒體</strong>。他把這比作「別讓小孩太早對毒品上癮」，預測會養出較不極端化的下一代選民。Travis 強烈反對：大家都同意社群媒體是「腦腐」、會比香菸更糟，但 16 歲以下禁令的真正用意，是逼成年人<strong>實名、去匿名化</strong>，藉此建立全面審查機制。</p>
+
+  <div class="pull">
+    <div class="q">真相與正義，是社會的<b>免疫系統</b>。當免疫系統被壓制，所有社會病<b>都會爆發</b>。</div>
+    <div class="who">Travis Kalanick · 論該怎麼判讀社會的走向</div>
+  </div>
+
+  <p class="body">Gavin 同意禁令本身是好的，但代價太高——歐盟當權者真正想要的，是限制 X 上講他們不愛聽的話的匿名帳號。他並引一項研究替「進步派政策可被量測地糟」背書：選出共和黨地檢，該市年輕黑人男性的<strong>全因死亡率下降 7%</strong>。以色列議題則成了 Dan Goldman 敗選的近乎單一變數——他極挺以色列，輸給同為猶太裔、卻跑去清真寺譴責加薩「種族滅絕」的 Brad Lander。</p>
+
+  <div class="bignums">
+    <div class="bignum"><div class="v num">80<small>%</small></div><div class="l">民主黨人現在說不認同以色列</div></div>
+    <div class="bignum"><div class="v num">57<small>%</small></div><div class="l">50 歲以下（跨黨派）不認同度</div></div>
+    <div class="bignum"><div class="v num pos">−7<small>%</small></div><div class="l">共和黨地檢 → 年輕黑人男性全因死亡率</div></div>
+    <div class="bignum"><div class="v num">×1</div><div class="l">Goldman 之敗幾乎是對以色列的單一議題公投</div></div>
+  </div>
+
+  <p class="body">Chamath 認為核心問題是大家無法把<strong>猶太人、以色列人、以色列國、Netanyahu</strong> 區分開來。他用 9/11 後《愛國者法案》的例子說明：國家受創後會授權領袖做平時不可能的事；但如今這些被全部混為一談，對 BB 有意見就被當成反整個國家、整個宗教——他形容這「完全令人震驚」。Gavin 補充，以色列還有個迫切的公關問題：缺一個 35 歲以下、英文流利、熟悉社群媒體的代言人。</p>
+</div></section>
+
+<!-- ════ 03 CHINA AI ════ -->
+<section id="china"><div class="wrap rev">
+  <div class="label"><span class="n">03</span> 中國開源 AI</div>
+  <h2>一個 MIT 授權的模型，<span class="thin">追到前沿門口</span></h2>
+  <p class="lede">中國 Z.AI 釋出 GLM 5.2：完全可下載、可自架、可商用，效能直逼最頂的閉源模型——而成本只有零頭。</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">744<small>B</small></div><div class="l">參數量（MIT 授權、完全自架）</div></div>
+    <div class="bignum"><div class="v num">100<small>萬</small></div><div class="l">token 脈絡窗</div></div>
+    <div class="bignum"><div class="v num">51</div><div class="l">Artificial Analysis 智慧指數 · 開源權重新高</div></div>
+    <div class="bignum"><div class="v num pos">−85<small>%</small></div><div class="l">API 成本 vs GPT 5.5（同等效能）</div></div>
+  </div>
+  <p class="body">在前沿 SWE 編碼基準上，GLM 5.2 <strong>贏過 GPT 5.5</strong>，只<strong>落後 Claude Opus 4.8 不到 1 個百分點</strong>。Z.AI 創辦人告訴 Elon Musk，達到 Fable 級能力會比 2027 Q1 更早到。Gavin 坦言這挑戰了他原本的看法，而關鍵機制是<span class="gl" data-d="蒸餾（distillation）：用成千上萬支手機透過遮罩帳號向雲端 API 問特定問題，收割模型輸出的「推理軌跡」（reasoning traces），再餵回自己的模型訓練。">蒸餾</span>。</p>
+
+  <div class="pull">
+    <div class="q">它就是一張<b>小抄</b>——讓其他模型抄、好追上前沿。但現在這模型已經好到<b>能做自己的 RL</b>，貓大概已經放出袋子了。</div>
+    <div class="who">Gavin Baker · 論蒸餾與「之後呢」</div>
+  </div>
+
+  <p class="body">Gavin 的主軸是<span class="gl" data-d="可組合模型（composable models）／Karpathy 說的「LLM 議會」：企業用一個路由器，多數查詢走自家開源模型，最難的才交給前沿模型驗證、補強。">可組合模型</span>：未來每家企業都有一個路由器，多數查詢走自家的開源模型，只有最難的才交給前沿模型把關。開源對前沿實驗室的利潤是壞事，但對 AI 基礎設施供應商是大好事——它只是把價值從利潤搬到基礎設施。這也對應到一個常被誤解的比例：</p>
+
+  <div class="split-lab">經濟價值 / 營收（到目前為止）</div>
+  <div class="split"><div class="s-front" data-flex="90">Frontier ~90%</div><div class="s-open" data-flex="10">Open</div></div>
+  <div class="split-lab" style="margin-top:26px">Token 消耗量</div>
+  <div class="split"><div class="s-front" data-flex="20">Frontier</div><div class="s-open" data-flex="80">Open Source ~80%+</div></div>
+
+  <p class="body">Jason 補一刀：<strong>Nvidia 才是美國的開源冠軍</strong>，隨時能放出 GLM 5.2 等級的模型，只是會跟客戶搶生意（通路衝突）而不做——他甚至預測 Nvidia 可能反過來做 OpenAI 的競品。本週 OpenAI 推出自研「Jalapeño」晶片（傳由 Broadcom 代工），形同對 Jensen 下戰帖。Sacks（現於政府任職）則把這拉回國安：</p>
+
+  <div class="callout b"><p><strong>Sacks：</strong>我們在模型上落後 <strong>6 個月</strong>、在矽（晶片）上落後 <strong>24 個月</strong>，結果總體只落後幾個月——我們到底在玩什麼？中國用華為昇騰 910b 訓練了整個 GLM 5 家族，還會把「<strong>盒裝 AI</strong>」以極低價賣向全球。一直這樣自我設限，我們會輸。</p></div>
+
+  <p class="body">他點名 Anthropic 的 Fable 因越獄疑慮被政府要求回滾、GPT 5.6 卡在審批，正好讓「目前可用的最佳模型」等於一個中國開源權重模型；並暗示 Dario 想要的「AI 版 FAA」監管護城河，可能是搬石頭砸自己腳。至於審查，他說那不是致命問題——Perplexity 早就示範，美國公司可以 fork 中國模型、把天安門之類的內容修回去。</p>
+</div></section>
+
+<!-- ════ 04 MICRON / MEMORY ════ -->
+<section id="micron"><div class="wrap rev">
+  <div class="label"><span class="n">04</span> Micron · 記憶體荒</div>
+  <h2>通膨來到了<span class="thin">桌面</span></h2>
+  <p class="lede">全球只有三家能做高頻寬記憶體，2026 全年供給早已售罄。Micron 財報炸裂的另一面，是 Apple 開始漲價。</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num pos">+4×</div><div class="l">營收 YoY · $9B → $42B</div></div>
+    <div class="bignum"><div class="v num">+16<small>%</small></div><div class="l">超出市場預期</div></div>
+    <div class="bignum"><div class="v num">$50<small>B</small></div><div class="l">Q4 指引（vs 原 $43B）</div></div>
+    <div class="bignum"><div class="v num">10×</div><div class="l">股價漲幅 · HBM 概念自 2025 預測秀漲 14×</div></div>
+  </div>
+  <p class="body">Gavin 認為 <span class="gl" data-d="DRAM：動態隨機存取記憶體。HBM（高頻寬記憶體）是把多片 DRAM 裸晶堆疊封裝、疊在 GPU 上的特化版本，是 AI 伺服器效能的基礎。">DRAM（尤其 HBM DRAM）</span>是「最重要的瓶頸」，因為記憶體容量與頻寬是每個 AI 模型效能的基礎——Elon 把 Terrafab 聚焦在記憶體就是看準這點。財報裡更關鍵的是 Micron 新簽的<span class="gl" data-d="SDA（供應鏈協議）：與大客戶簽訂、帶價格地板與天花板的長約。Micron 新約涵蓋約 50% 營收（僅四個客戶），地板價的毛利率甚至高過上一輪週期高點。">供應鏈協議</span>，帶價格地板與天花板、涵蓋約 <strong>50%</strong> 營收，地板價的毛利率甚至高過上一輪週期高點。他估 DRAM 明年將吃掉超大規模業者 <strong>30–40%</strong> 的資本支出。</p>
+
+  <div class="callout"><p>記憶體被資料中心吸乾，外溢到了消費端：Apple 的 <strong>MacBook Neo</strong> 從 <strong>$699</strong> 漲到 <strong>$799</strong>、<strong>Mac Studio 漲 25%</strong>，Microsoft 也漲了 Xbox，Switch、PlayStation 接著遭殃。「這又是我討厭 AI 的一個理由」——Jason。</p></div>
+
+  <p class="body">這種 DRAM 很難做：HBM 把裸晶堆疊（HBM3 約 8 層，正往 12、16 層走）再封裝，本身就是高難度技術。中國 CXMT 即將上市，會用便宜的消費級 DRAM 淹滿市場，但 AI 伺服器要的那種，仍只有三家做得出來。Gavin 還點出一個政治現實：難的不是蓋 Micron，而是「在深藍州蓋新晶圓廠」——紐約那座 Micron 廠破土當天就因環保問題被叫停，他猜最後落腳德州。</p>
+
+  <div class="pull">
+    <div class="q">做這種記憶體，是<b>科學能做到最接近魔法</b>的程度。</div>
+    <div class="who">Gavin Baker · 論為何只有三家公司做得出來</div>
+  </div>
+</div></section>
+
+<!-- ════ 05 SPACE / MEGAPOD ════ -->
+<section id="space"><div class="wrap rev">
+  <div class="label"><span class="n">05</span> 太空運算 · Megapod</div>
+  <h2>把資料中心<span class="thin">送上軌道的數學</span></h2>
+  <p class="lede">當地面越來越貴、越來越難批，Gavin 用第一性原理算了一筆帳：只要發射夠便宜，運算上太空就划算。</p>
+  <p class="body">地面一座 1GW 資料中心要 <strong>$35B 半導體 + $25B 電力與冷卻設備</strong>，而後者多是會通膨的人力安裝成本。太空方案同樣是 $35B 的矽，差別在發射；當 Starship 可重複使用，把一個 GW 送上太空只要約 <strong>$5B</strong> 發射成本，而且會隨快速重用持續通縮。</p>
+  <div class="chart">
+    <div class="ct">1 GW 運算 · 建置成本</div>
+    <div class="cs">地面 $60B　vs　太空 $40B</div>
+    <div class="bars">
+      <div class="bar-row"><div class="bar-lab"><b>地面</b>$35B 矽 + $25B 電力冷卻</div><div class="bar-track"><div class="bar-fill bf-2" data-w="100"><span class="v">$60B</span></div></div></div>
+      <div class="bar-row"><div class="bar-lab"><b>太空</b>$35B 矽 + $5B 發射</div><div class="bar-track"><div class="bar-fill bf-1" data-w="67"><span class="v">$40B</span></div></div></div>
+    </div>
+    <div class="cap">Gavin 的第一性原理拆解。地面的 $25B（電力冷卻、多為人力）明顯通膨，太空的 $5B 發射隨 Starship 重用而通縮——他估三、四年後會是 $70B vs $40B。另需約 $1B/年供電與散熱。圖為相對比例。</div>
+  </div>
+  <p class="body">他特別澄清：太空資料中心不是「五角大廈那麼大的一棟」，而是用雷射互連、漂在太空的機架，等於一個虛擬資料中心。Chamath 推論預測中的 AI 能耗被嚴重低估（供給極稀缺、需求近乎無限），這會把經濟天平推向太空、並偏好 SpaceX 的運算堆疊；而留在地面、合理規模（數百 MW 到 GW）的算力，會變成稀缺的「鑽石」。</p>
+
+  <div class="callout"><p><strong>Chamath：</strong>留在地面上的任何東西，會變得<strong>無比有價值</strong>。它會是一顆鑽石——如果在合理的數百 MW 到 GW 規模，那些就像<strong>希望鑽石</strong>。</p></div>
+
+  <p class="body">回到地面，本週出現 Tesla「<strong>Megapod</strong>」商標申請（申請日 6/18）：模組化、自帶 GPU 與冷卻的資料中心硬體，傳聞要放在已核准的超級充電站。Chamath 解釋地面開機三大難關（土地、分區、電力），以及基礎設計規格正被放寬——從必須液冷，回頭接受可氣冷的較舊算力；一個「貨櫃丟在水泥地上插電就跑」、<strong>90 天</strong>建置週期的模式正在興起。Travis 甚至說，要把自家 500 處房產的運算「放進廚房」。</p>
+
+  <p class="body">但 Gavin 與 Travis 都強調一條硬限制：<strong>分散式訓練</strong>若設備彼此距離遠，效率會劇烈下降——要緊鄰，連自己光纖 2 公里外都不行。不過所有不利於訓練的，反而<strong>對推論有利</strong>，分散式推論雲正在到來。Gavin 進一步談<span class="gl" data-d="推論拆解（disaggregation）：把推論分成 prefill（理解問題，記憶體容量導向）與 decode（生成下一個 token，記憶體頻寬導向）兩段，分別用最適合的晶片處理。">把推論拆成 prefill 與 decode</span>，用 Groq／Cerebras 晶片搭配舊的 H100／A100，做出有競爭力的方案，把 GPU 壽命延長到 7–12 年。</p>
+</div></section>
+
+<!-- ════ 06 IPO ════ -->
+<section id="ipo"><div class="wrap rev">
+  <div class="label"><span class="n">06</span> 兆元 IPO 潮</div>
+  <h2>Anthropic 值 <span class="thin">3 兆？</span></h2>
+  <p class="lede">SpaceX 已上市、Anthropic 與 OpenAI 在路上、Cerebras 剛跌破發行價——市場要怎麼吞下這麼多新供給？</p>
+  <div class="bignums">
+    <div class="bignum"><div class="v num">~$3<small>T</small></div><div class="l">Gavin 估 Anthropic 今天該值</div></div>
+    <div class="bignum"><div class="v num">$100<small>B+</small></div><div class="l">Anthropic 今年營收（作收）</div></div>
+    <div class="bignum"><div class="v num pos">85<small>%</small></div><div class="l">外傳推論毛利率</div></div>
+    <div class="bignum"><div class="v num">~$4<small>T</small></div><div class="l">市場面對的新發行 backlog</div></div>
+  </div>
+  <p class="body">Gavin 認為市場吸收沒問題——這只是從私募市場移到「更大的」公開市場，而且實際只釋出一小片流通量（<strong>5% 流通約 $150B</strong>，很容易消化）。SpaceX 方面，他提醒每位投資人／員工過去十年每半年就有一次賣出機會，未必有大家想的「流動性高牆」；近半員工是在 IPO 價買進，Elon 與許多老股東都不是賣方。真正的教材在 Cerebras：</p>
+
+  <div class="bb">
+    <div class="bbc bull"><div class="h">▲ 多方</div><p>與 OpenAI 在 2025/12 簽下約 <strong>$25B</strong> 大約；若 2027 年能一個月加 <strong>50MW</strong>，將以約 <strong>$9B</strong> 雲端年化營收出場——而目前市值<strong>不到 $40B</strong>。</p></div>
+    <div class="bbc bear"><div class="h">▼ 空方</div><p>有一類基金經理人只要股票<strong>跌破發行價</strong>就無條件賣出（視為被毀棄的承諾），空頭因此在接近發行價時放空、製造<strong>踩踏</strong>。首份財報後兩天重挫。</p></div>
+  </div>
+
+  <p class="body">Gavin 示範該怎麼講 Cerebras 的故事：產能要時間。從下單台積電到產出 token，是一條被供應鏈鎖死的時間軸——投資人該盯的不是競爭定位，而是「他們多快能上電」。</p>
+  <div class="tl">
+    <div class="tl-row"><div class="tl-when">下單台積電</div><div class="tl-what"><b class="num">4</b><span>個月，台積電做出晶片</span></div></div>
+    <div class="tl-row"><div class="tl-when">晶片 → 伺服器</div><div class="tl-what"><b class="num">2</b><span>個月（上下加減），把晶片變成一台伺服器</span></div></div>
+    <div class="tl-row"><div class="tl-when">通電 → 產出 token</div><div class="tl-what"><b class="num">1</b><span>個月，找到電力、開始產出 token</span></div></div>
+    <div class="tl-row"><div class="tl-when">最早可見影響</div><div class="tl-what"><b>勞動節</b><span>OpenAI 合約的貢獻，最快要到 2026 勞動節前後才看得到</span></div></div>
+  </div>
+
+  <p class="body">眾人一致認為 IPO 該用<span class="gl" data-d="荷蘭式拍賣（Dutch auction）：投資人各自填出願意出的價與量，依清算量決定統一成交價，而非由銀行家「喊一個想要的數字」。">荷蘭式拍賣</span>定價。Travis 趁機緬懷當年 Uber：那輪用荷蘭式拍賣、想清 <strong>$15 億</strong>，最終落在 <strong>$170 億</strong>估值；而更早 Chamath 在 Fidelity 把 Uber 定在 <strong>$140 億</strong>，被媒體罵翻——對照如今動輒兆元級的數字，兩人只能感嘆「以前 150 億曾經是一大筆錢」。</p>
+</div></section>
+
+<!-- ════ FOOTER ════ -->
+<footer><div class="wrap rev">
+  <div class="big">同一張桌子上，<b>政治的鐘擺盪向社會主義</b>、<b>AI 的前沿被開源追平</b>、<b>最硬的瓶頸退回到一片矽</b>——而錢，正從私募湧向公開市場。<small>一集 All-In，剛好就是 2026 年中的整個張力場。</small></div>
+  <div class="meta">
+    All-In Podcast · 第 278 集 · 2026.06.27<br>
+    Jason Calacanis · Chamath Palihapitiya · David Sacks · Gavin Baker · Travis Kalanick<br>
+    <a href="https://www.youtube.com/watch?v=w8ah_tA0yfg" target="_blank" rel="noopener">youtube.com/watch?v=w8ah_tA0yfg</a>
+  </div>
+  <p class="disc">本頁為 podcast 討論的重點整理，數字與引述取自該集內容、經與原逐字稿核對，屬講者觀點與預測，非投資建議。圖表為示意比例，用於傳達量級關係。部分受訪者言論涉及政治立場，僅為忠實轉述、不代表本站觀點。</p>
+</div></footer>
+
+<script>
+// nav background on scroll
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+// reveal + bar/split growth
+function grow(el){
+  el.querySelectorAll('.bar-fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.fill[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  el.querySelectorAll('.sg[data-w]').forEach(b=>b.style.width=(parseFloat(b.dataset.w)/2)+'%');
+  el.querySelectorAll('.b[data-h]').forEach(b=>b.style.height=b.dataset.h+'%');
+  el.querySelectorAll('.split>div[data-flex]').forEach(s=>s.style.flex=s.dataset.flex);
+}
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(!e.isIntersecting)return;
+    e.target.classList.add('in'); grow(e.target); io.unobserve(e.target); });
+},{threshold:.14});
+document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+// glossary：桌機 hover 浮層；手機點擊 → body 層置中彈窗（不被裁切）
+(function(){
+  const mob=()=>matchMedia('(max-width:760px)').matches;
+  let pop,backdrop,gt,gd;
+  function build(){
+    backdrop=document.createElement('div');backdrop.className='gl-backdrop';
+    pop=document.createElement('div');pop.className='gl-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-modal','true');
+    pop.innerHTML='<div class="gh"><div class="gt"></div><button class="gx" type="button" aria-label="關閉">✕</button></div><div class="gd"></div>';
+    gt=pop.querySelector('.gt');gd=pop.querySelector('.gd');
+    document.body.appendChild(backdrop);document.body.appendChild(pop);
+    backdrop.addEventListener('click',close);
+    pop.querySelector('.gx').addEventListener('click',close);
+  }
+  function open(term,def){
+    if(!pop)build();
+    gt.textContent=term;gd.textContent=def;
+    backdrop.classList.add('open');
+    void pop.offsetHeight;
+    pop.classList.add('open');
+  }
+  function close(){if(pop){pop.classList.remove('open');backdrop.classList.remove('open')}}
+  document.querySelectorAll('.gl').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(mob()){open(el.textContent.trim(),el.getAttribute('data-d')||'');return}
+    const o=el.classList.contains('open');
+    document.querySelectorAll('.gl.open').forEach(x=>x.classList.remove('open'));
+    if(!o)el.classList.add('open');
+  }));
+  document.addEventListener('click',()=>document.querySelectorAll('.gl.open').forEach(o=>o.classList.remove('open')));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+})();
+// theme toggle
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>

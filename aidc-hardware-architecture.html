@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Data Center 底層硬體架構 · 規格手冊</title>
+
+<!-- 首頁列表中繼資料（build-index.js 讀取，產生 notes.json） -->
+<meta name="note:src"    content="技術筆記">
+<meta name="note:date"   content="2026.06.24">
+<meta name="note:title"  content="拆解一座 AI 資料中心的每一層硬體">
+<meta name="note:dek"    content="由下而上拆 AIDC 九層硬體：運算、HBM、scale-up/out 互連、機架、電力與散熱，附 2026 規格與世代演進。">
+<meta name="note:people" content="">
+
+<!-- 在繪製前就決定主題，避免載入時閃一下錯誤配色 -->
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('theme');
+    if(t !== 'light' && t !== 'dark')
+      t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════ TOKENS — Canonical superset（每個 note 檔複製同一份，見 DESIGN-SYSTEM.md §2） ════ */
+:root{
+  color-scheme:dark;
+  --bg:#000; --surface:#000; --ink:#fff; --ink2:#b9b9bd; --ink3:#7c7c82;
+  --line:rgba(255,255,255,.16); --hair:rgba(255,255,255,.10);
+  --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --track:rgba(255,255,255,.06);
+  --accent:#9db7d8;                 /* cold steel：連結/編號/focus/技術術語 */
+  --mark:rgba(157,183,216,.28);
+  --pos:#37d6ad; --neg:#ff5a4d;
+  --bar-1:#9db7d8; --bar-1-ink:#0e141c;
+  --bar-2:#5d769b; --bar-2-ink:#fff;
+  --bar-3:#313d4d; --bar-3-ink:#aebfd4;
+  --gl-bg:#15161b;
+  --nav-bg:rgba(0,0,0,.55); --nav-bg2:rgba(0,0,0,.78);
+  --sf:"Saira","PingFang TC","Helvetica Neue","Microsoft JhengHei",sans-serif;
+}
+[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#ffffff; --ink:#16181d; --ink2:#4a4d55; --ink3:#85888f;
+  --line:rgba(0,0,0,.15); --hair:rgba(0,0,0,.08);
+  --panel:rgba(0,0,0,.04); --panel2:rgba(0,0,0,.06);
+  --track:rgba(0,0,0,.06);
+  --accent:#3f6597; --mark:rgba(63,101,151,.20);
+  --pos:#0e8c68; --neg:#d23b2e;
+  --bar-1:#3f6597; --bar-1-ink:#fff;
+  --bar-2:#84a0c5; --bar-2-ink:#fff;
+  --bar-3:#d3deec; --bar-3-ink:#355080;
+  --gl-bg:#ffffff;
+  --nav-bg:rgba(247,247,245,.72); --nav-bg2:rgba(247,247,245,.88);
+}
+
+/* ── base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sf);background:var(--bg);color:var(--ink);font-size:17px;line-height:1.6;
+  font-weight:400;letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .35s ease,color .35s ease}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+a{color:var(--ink);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+strong{color:var(--ink);font-weight:500}
+em{font-style:normal;color:var(--accent);font-weight:500}            /* 技術術語：唯一色相點綴 */
+code{font-family:var(--sf);font-size:.9em;background:var(--panel);border:1px solid var(--hair);
+  border-radius:3px;padding:1px 7px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+/* ════ NAV + theme toggle（全站 chrome，54px 毛玻璃） ════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:54px;display:flex;align-items:center;
+  background:var(--nav-bg);backdrop-filter:saturate(160%) blur(14px);-webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+nav.scrolled{border-bottom-color:var(--hair);background:var(--nav-bg2)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .brand{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;display:flex;align-items:center;gap:10px;min-width:0}
+nav .brand a{color:var(--ink2);transition:color .2s;white-space:nowrap}
+nav .brand a:hover{color:var(--ink)}
+nav .brand .sep{color:var(--ink3);font-weight:400}
+nav .brand .here{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav .links{display:flex;gap:28px}
+nav .links a{font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.2em;color:var(--ink2);transition:color .2s}
+nav .links a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:24px}
+.theme-toggle{background:none;border:0;padding:0;cursor:pointer;color:var(--ink2);width:34px;height:34px;
+  display:grid;place-items:center;border-radius:50%;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.theme-toggle:hover{color:var(--ink);background:var(--panel)}
+.theme-toggle svg{width:17px;height:17px;display:block}
+.theme-toggle .icon-moon{display:none}
+[data-theme="light"] .theme-toggle .icon-sun{display:none}
+[data-theme="light"] .theme-toggle .icon-moon{display:block}
+@media(max-width:760px){nav .links{display:none}nav .brand .sep,nav .brand .here{display:none}}
+
+/* ════ HERO（canonical 單一：靠左 ticker） ════ */
+.hero{position:relative;padding:120px 0 40px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 120%,rgba(80,110,150,.22),transparent 55%),
+            radial-gradient(70% 55% at 85% -5%,rgba(120,140,170,.13),transparent 60%)}
+[data-theme="light"] .hero::before{background:none}
+.hero .inner{position:relative;z-index:1}
+.ticker{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.ticker .tk{font-size:12px;font-weight:600;letter-spacing:.2em;border:1px solid var(--line);border-radius:3px;padding:5px 12px}
+.ticker .mt{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(33px,6.1vw,70px);font-weight:600;line-height:1.18;letter-spacing:.005em}
+.hero h1 .thin{font-weight:300}
+.hero h1 .hl{color:var(--accent)}
+.hero .sub{font-size:clamp(16px,2.1vw,21px);font-weight:300;color:var(--ink2);max-width:780px;margin:30px 0 0;line-height:1.6}
+.hero .sub b{color:var(--ink);font-weight:500}
+
+/* ════ 層次堆疊（簽名元件：可點 TOC，由上而下） ════ */
+.stack{margin-top:44px;border:1px solid var(--hair);background:var(--hair);display:grid;gap:1px}
+.stack-cap{background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding:13px 20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--ink3);flex-wrap:wrap}
+.stack-cap i{display:inline-block;width:9px;height:9px;border-radius:1px;margin-right:6px;vertical-align:middle}
+.stack-cap i.su{background:var(--accent)} .stack-cap i.so{background:var(--ink3)}
+.layer{display:grid;grid-template-columns:48px 1fr auto;gap:16px;align-items:center;background:var(--surface);
+  padding:15px 20px;border-left:2px solid transparent;transition:background .18s,border-color .18s}
+.layer:hover{background:var(--panel)}
+.layer.su{border-left-color:var(--accent)} .layer.so{border-left-color:var(--ink3)}
+.layer .ln{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.layer .lname{font-size:15px;font-weight:500;color:var(--ink)}
+.layer .lname span{display:block;font-size:12.5px;font-weight:300;color:var(--ink2);margin-top:3px;letter-spacing:.01em}
+.layer .ltag{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink3);white-space:nowrap}
+@media(max-width:760px){.layer{grid-template-columns:36px 1fr;gap:12px}.layer .ltag{display:none}}
+
+/* ════ METRIC STRIP（6 欄格線牆） ════ */
+.strip{margin-top:30px;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.cell{background:var(--surface);padding:20px 18px}
+.cell .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.cell .v{font-size:26px;font-weight:500;margin-top:10px;line-height:1;font-variant-numeric:tabular-nums}
+.cell .n{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.4}
+@media(max-width:760px){.strip{grid-template-columns:repeat(2,1fr)}}
+
+/* ════ SECTION · label · 文字 ════ */
+section{padding:104px 0;border-top:1px solid var(--hair);position:relative}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.26em;color:var(--ink3);
+  display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.label .n{color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:2px 9px;letter-spacing:.06em}
+h2{font-size:clamp(30px,4.6vw,52px);font-weight:600;line-height:1.1;letter-spacing:.01em;margin-bottom:20px}
+h2 .thin{font-weight:300}
+.lede{font-size:clamp(18px,2.2vw,22px);font-weight:300;line-height:1.55;color:var(--ink2);max-width:780px}
+p.body{font-size:18px;font-weight:300;line-height:1.72;color:var(--ink2);max-width:780px;margin-top:26px}
+p.body strong{color:var(--ink);font-weight:500}
+
+/* 段內子標題（取代 datasheet 的 ▸ h3） */
+.subhead{font-size:19px;font-weight:600;color:var(--ink);letter-spacing:.01em;margin-top:52px;margin-bottom:2px;
+  display:flex;align-items:baseline;gap:12px;max-width:780px}
+.subhead .mk{color:var(--accent);font-size:14px;font-weight:500}
+
+/* 清單（— accent marker） */
+.list{margin-top:24px;max-width:780px;list-style:none}
+.list li{position:relative;padding-left:26px;margin:13px 0;font-size:16.5px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.list li::before{content:"—";position:absolute;left:0;color:var(--accent);font-weight:500}
+.list li b{color:var(--ink);font-weight:500}
+
+/* 流程 / 公式塊 */
+.flow{margin-top:24px;max-width:780px;border:1px solid var(--line);background:var(--panel);
+  padding:18px 20px;font-size:14.5px;line-height:1.95;color:var(--ink);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.flow code{background:none;border:0;padding:0;font-size:1em}
+
+/* ════ BENTO 卡片牆（3 / 2 欄） ════ */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.bento2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:30px;background:var(--hair);border:1px solid var(--hair)}
+.card{background:var(--surface);padding:34px 30px}
+.card .ico{font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);display:block;margin-bottom:16px}
+.card h3{font-size:21px;font-weight:600;letter-spacing:.01em;margin-bottom:12px}
+.card p{font-size:15px;font-weight:300;line-height:1.7;color:var(--ink2)}
+.card p b{color:var(--ink);font-weight:500}
+@media(max-width:760px){.bento,.bento2{grid-template-columns:1fr}}
+
+/* ════ 規格表（spec 變體：靠左、文字密集） ════ */
+.tbl{margin-top:30px;overflow-x:auto;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px;font-variant-numeric:tabular-nums}
+caption{caption-side:top;text-align:left;padding:16px 18px 4px;font-size:12px;letter-spacing:.04em;color:var(--ink3)}
+th,td{padding:12px 16px;text-align:right;border-bottom:1px solid var(--hair);vertical-align:top}
+th:first-child,td:first-child{text-align:left;color:var(--ink2);font-weight:400}
+thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:600;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.hl td{color:var(--ink);font-weight:600;background:var(--panel)}
+table.spec th,table.spec td{text-align:left}
+table.spec td:first-child{color:var(--ink);font-weight:500;white-space:nowrap}
+table.spec .gen{font-size:12px;color:var(--ink3)}
+
+/* ════ THESIS / PULL-QUOTE ════ */
+.pull{padding:56px 0 44px;text-align:center}
+.pull .q{font-size:clamp(23px,3.3vw,36px);font-weight:300;line-height:1.36;letter-spacing:.005em;max-width:900px;margin:0 auto}
+.pull .q b{font-weight:600}
+.pull .who{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.24em;color:var(--ink3);margin-top:28px}
+
+/* ════ CALLOUT（中性 / 重點 accent） ════ */
+.callout{border:1px solid var(--line);border-left:3px solid var(--ink);padding:24px 26px;margin-top:30px;max-width:840px}
+.callout.k{border-left-color:var(--accent)}
+.callout p{font-size:16.5px;font-weight:300;line-height:1.68;color:var(--ink2)}
+.callout p strong{color:var(--ink);font-weight:500}
+
+/* ════ GLOSSARY 區（2 欄定義表） ════ */
+.gloss{margin-top:30px;columns:2;column-gap:44px}
+.gloss dt{font-size:14px;font-weight:600;color:var(--accent);margin-top:16px;break-after:avoid;letter-spacing:.01em}
+.gloss dd{font-size:14px;font-weight:300;color:var(--ink2);margin:3px 0 0;line-height:1.6;break-inside:avoid}
+@media(max-width:760px){.gloss{columns:1}}
+
+/* ════ 架構示意圖（inline SVG · theme-aware） ════ */
+.fig{margin-top:34px;border:1px solid var(--hair);background:var(--surface);padding:30px 26px 22px}
+.fig svg{display:block;width:100%;height:auto;overflow:visible;font-family:var(--sf)}
+.fig .fcap{font-size:12.5px;font-weight:300;color:var(--ink3);margin-top:20px;line-height:1.65;letter-spacing:.02em;max-width:840px}
+.fig .fcap b{color:var(--ink2);font-weight:500}
+.d-box{fill:var(--panel);stroke:var(--line);stroke-width:1.2}
+.d-box2{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.d-acc{stroke:var(--accent);stroke-width:2.2;fill:none}
+.d-accstroke{fill:none;stroke:var(--accent);stroke-width:1.4}
+.d-tsv{stroke:var(--accent);stroke-width:1.3;fill:none;stroke-dasharray:2 4;stroke-linecap:round}
+.d-line{stroke:var(--line);stroke-width:1.2;fill:none}
+.d-hair{stroke:var(--hair);stroke-width:1;fill:none}
+.d-dash{stroke:var(--ink3);stroke-width:1.2;fill:none;stroke-dasharray:5 4}
+.d-t{fill:var(--ink);font-size:12.5px;font-weight:500}
+.d-t2{fill:var(--ink2);font-size:11px;font-weight:400}
+.d-lbl{fill:var(--ink3);font-size:9.5px;font-weight:600;letter-spacing:.1em}
+.d-acct{fill:var(--accent);font-size:11.5px;font-weight:600;letter-spacing:.14em}
+
+/* ════ FOOTER ════ */
+footer{border-top:1px solid var(--line);padding:80px 0 70px;text-align:center}
+footer .big{font-size:clamp(24px,3.4vw,38px);font-weight:300;line-height:1.35;letter-spacing:.01em;max-width:840px;margin:0 auto 36px}
+footer .big b{font-weight:600}
+footer .big small{display:block;font-size:.5em;color:var(--ink3);margin-top:18px;font-weight:300}
+footer .meta{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:.18em;color:var(--ink3);line-height:2.1}
+footer .disc{font-size:12px;font-weight:300;color:var(--ink3);max-width:700px;margin:30px auto 0;line-height:1.7}
+
+/* ════ 動效 ════ */
+.rev{opacity:0;transform:translateY(24px);transition:opacity .85s ease,transform .85s ease}
+.rev.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev{transition:none!important;opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav id="nav"><div class="wrap">
+  <div class="brand"><a class="home" href="index.html">Steve's&nbsp;Notes</a><span class="sep">›</span><span class="here">AIDC 硬體架構</span></div>
+  <div class="nav-right">
+    <div class="links">
+      <a href="#s01">運算</a>
+      <a href="#s03">互連</a>
+      <a href="#s05">機架</a>
+      <a href="#s06">網路</a>
+      <a href="#s08">電力散熱</a>
+      <a href="#s10">TCO</a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切換深色／淺色主題" title="切換深色／淺色主題">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</div></nav>
+
+<!-- ════ HERO ════ -->
+<header class="hero"><div class="inner wrap">
+  <div class="ticker">
+    <span class="tk">技術筆記</span>
+    <span class="mt">知識整理 · 2026.06 · 資料截至 2026 年中</span>
+  </div>
+  <h1>從矽到機房，<br>拆解一座 <span class="hl">AI 資料中心</span><br><span class="thin">由下而上的每一層硬體</span></h1>
+  <p class="sub">這份手冊由下往上拆解一座 AI 資料中心的每一層硬體：晶片內的<b>運算與記憶體</b>、機架內的 <b>scale-up 互連</b>、跨機架的 <b>scale-out 網路</b>、機架系統本身，一直到撐起它們的<b>電力與散熱</b>設施。每一層都附上 2026 年當下的實際規格與世代演進，供建立完整的底層認知。</p>
+
+  <!-- 層次堆疊（可點 TOC） -->
+  <div class="stack" aria-label="硬體層次堆疊圖">
+    <div class="stack-cap">
+      <span>層次堆疊 · 點任一層跳至對應章節</span>
+      <span><i class="su"></i>Scale-Up　<i class="so"></i>Scale-Out</span>
+    </div>
+    <a class="layer" href="#s09"><span class="ln">09</span><span class="lname">散熱<span>Cooling — 液冷 / 浸沒 / CDU</span></span><span class="ltag">Facility</span></a>
+    <a class="layer" href="#s08"><span class="ln">08</span><span class="lname">電力<span>Power — 800 VDC / busbar / PSU</span></span><span class="ltag">Facility</span></a>
+    <a class="layer" href="#s06"><span class="ln">06</span><span class="lname">網路拓撲<span>Fabric topology — fat-tree / rail</span></span><span class="ltag">Cluster</span></a>
+    <a class="layer so" href="#s04"><span class="ln">04</span><span class="lname">Scale-Out 互連<span>InfiniBand / Ethernet</span></span><span class="ltag">Cluster</span></a>
+    <a class="layer" href="#s05"><span class="ln">05</span><span class="lname">機架系統<span>Rack — NVL72 / HGX / MGX</span></span><span class="ltag">Rack</span></a>
+    <a class="layer su" href="#s03"><span class="ln">03</span><span class="lname">Scale-Up 互連<span>NVLink / NVSwitch / C2C</span></span><span class="ltag">Rack</span></a>
+    <a class="layer" href="#s07"><span class="ln">07</span><span class="lname">儲存<span>Storage — NVMe / parallel FS</span></span><span class="ltag">Node</span></a>
+    <a class="layer" href="#s02"><span class="ln">02</span><span class="lname">記憶體<span>HBM — 3D 堆疊 DRAM</span></span><span class="ltag">Package</span></a>
+    <a class="layer" href="#s01"><span class="ln">01</span><span class="lname">運算<span>GPU · CPU · Tensor Core</span></span><span class="ltag">Silicon</span></a>
+  </div>
+</div></header>
+
+<!-- ════ 儀表板 STRIP ════ -->
+<section style="padding-top:64px;border-top:none"><div class="wrap rev">
+  <div class="strip">
+    <div class="cell"><div class="k">世代節奏</div><div class="v num">1 年/代</div><div class="n">Blackwell→Rubin→Feynman</div></div>
+    <div class="cell"><div class="k">機架功率</div><div class="v num">40→600 kW</div><div class="n">Hopper → Kyber</div></div>
+    <div class="cell"><div class="k">NVLink Domain</div><div class="v num">8→576</div><div class="n">scale-up world size</div></div>
+    <div class="cell"><div class="k">單卡 HBM</div><div class="v num">80→1024 GB</div><div class="n">H100 → Rubin Ultra</div></div>
+    <div class="cell"><div class="k">晶片熱通量</div><div class="v num">~600 W/cm²</div><div class="n">接近火箭引擎等級</div></div>
+    <div class="cell"><div class="k">NVLink 6 頻寬</div><div class="v num">3.6 TB/s</div><div class="n">每 GPU（Rubin 世代）</div></div>
+  </div>
+</div></section>
+
+<!-- ════ 00 · 架構總覽 ════ -->
+<section id="s00"><div class="wrap rev">
+  <div class="label"><span class="n">00</span> 架構總覽 · Overview</div>
+  <h2>一台被切成很多塊的，<span class="thin">巨型電腦</span></h2>
+  <p class="lede">傳統資料中心是「許多獨立伺服器的集合」；AI 資料中心則被設計成「一台被切成很多塊的巨型電腦」。理解這個差異，是理解所有下層硬體選擇的前提。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>兩個維度：Scale-Up 與 Scale-Out</h3>
+  <p class="body">AI 訓練與推論的瓶頸幾乎都在<strong>資料移動</strong>，而非單純的算力。因此整套硬體圍繞兩種互相垂直的擴展方式設計：</p>
+  <div class="bento2">
+    <div class="card"><span class="ico">Scale-Up · 縱向擴展</span><p>在<b>單一機架內</b>把多顆 GPU 透過極高頻寬、低延遲、且記憶體一致（coherent）的 fabric 連成「一顆邏輯上的大 GPU」。媒介是<b>銅線</b>（NVLink/NVSwitch），距離短、頻寬以 TB/s 計。world size 從 8 → 72 → 576 顆。</p></div>
+    <div class="card"><span class="ico">Scale-Out · 橫向擴展</span><p>把成千上萬個機架/節點連成叢集。媒介是<b>光纖</b>（InfiniBand / Ethernet），以 RDMA 搬移資料，頻寬以 Gb/s ~ Tb/s 計、延遲較高。負責跨節點的梯度同步與 checkpoint。</p></div>
+  </div>
+
+  <div class="fig rev">
+  <svg viewBox="0 0 760 290" role="img" aria-label="Scale-Up 與 Scale-Out 對照示意圖">
+    <line x1="380" y1="28" x2="380" y2="276" class="d-hair"/>
+    <!-- SCALE-UP -->
+    <text x="180" y="32" text-anchor="middle" class="d-acct">SCALE-UP</text>
+    <text x="180" y="50" text-anchor="middle" class="d-lbl">縱向 · 機架內 · 銅纜 NVLINK</text>
+    <rect x="44" y="72" width="272" height="156" rx="5" class="d-box2"/>
+    <line x1="108" y1="126" x2="252" y2="126" class="d-acc"/>
+    <line x1="108" y1="198" x2="252" y2="198" class="d-acc"/>
+    <line x1="108" y1="126" x2="108" y2="198" class="d-acc"/>
+    <line x1="252" y1="126" x2="252" y2="198" class="d-acc"/>
+    <line x1="108" y1="126" x2="252" y2="198" class="d-acc"/>
+    <line x1="252" y1="126" x2="108" y2="198" class="d-acc"/>
+    <rect x="80" y="102" width="56" height="48" rx="3" class="d-box"/><text x="108" y="131" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="224" y="102" width="56" height="48" rx="3" class="d-box"/><text x="252" y="131" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="80" y="174" width="56" height="48" rx="3" class="d-box"/><text x="108" y="203" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="224" y="174" width="56" height="48" rx="3" class="d-box"/><text x="252" y="203" text-anchor="middle" class="d-t2">GPU</text>
+    <text x="180" y="250" text-anchor="middle" class="d-t2">＝ 一顆邏輯上的大 GPU（8 → 576）</text>
+    <!-- SCALE-OUT -->
+    <text x="580" y="32" text-anchor="middle" class="d-acct">SCALE-OUT</text>
+    <text x="580" y="50" text-anchor="middle" class="d-lbl">橫向 · 跨機架 · 光纖 IB / ETHERNET</text>
+    <rect x="448" y="78" width="264" height="30" rx="3" class="d-box"/>
+    <text x="580" y="97" text-anchor="middle" class="d-t2">SPINE · LEAF 交換層</text>
+    <line x1="486" y1="108" x2="486" y2="166" class="d-dash"/>
+    <line x1="548" y1="108" x2="548" y2="166" class="d-dash"/>
+    <line x1="612" y1="108" x2="612" y2="166" class="d-dash"/>
+    <line x1="674" y1="108" x2="674" y2="166" class="d-dash"/>
+    <rect x="466" y="166" width="40" height="80" rx="3" class="d-box"/>
+    <rect x="528" y="166" width="40" height="80" rx="3" class="d-box"/>
+    <rect x="590" y="166" width="40" height="80" rx="3" class="d-box"/>
+    <rect x="652" y="166" width="40" height="80" rx="3" class="d-box"/>
+    <text x="580" y="266" text-anchor="middle" class="d-t2">＝ 成千上萬個機架 / 節點</text>
+  </svg>
+  <p class="fcap">兩種互相垂直的擴展。左：<b>scale-up</b> 在一個機架內把 GPU 以 NVLink 全互連（all-to-all），銅纜、TB/s、記憶體一致——整櫃像一顆大 GPU。右：<b>scale-out</b> 把成千上萬個機架掛上 spine／leaf 交換層，光纖、RDMA，負責跨節點同步。GB200 NVL72 的突破，就是把左邊那個框從 8 顆一舉撐到 72 顆。</p>
+  </div>
+
+  <p class="body">NVIDIA 的 GB200 NVL72 之所以是分水嶺，正是因為它把 scale-up domain 從一個機板的 8 顆 GPU，一舉拉到整個機架的 72 顆，讓 trillion-parameter 模型能「住在同一個 NVLink 空間裡」，把過去得靠 scale-out 網路承擔的同步流量，留在機架內的銅纜上解決。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>由下而上的九個層次</h3>
+  <p class="body">本手冊的章節對應上方堆疊圖。從矽晶片往上，每一層都在解一個物理問題，而上層的能力受限於下層：</p>
+  <ul class="list">
+    <li><b>矽 / 運算（§01）</b>製程逼近光罩極限，被迫走向 chiplet 多晶片封裝；精度則一路往 FP8 / FP4 下探以換取吞吐。</li>
+    <li><b>記憶體（§02）</b>HBM 的容量與頻寬是大模型的硬牆，3D 堆疊與 CoWoS 封裝是當前主軸。</li>
+    <li><b>Scale-Up / Scale-Out 互連（§03–04）</b>把運算單元連起來的兩張網，決定了叢集能多大、效率多高。</li>
+    <li><b>機架系統（§05）</b>把上述全部塞進一個機櫃的工程，密度爆增帶來重量、供電與散熱的連鎖限制。</li>
+    <li><b>網路拓撲（§06）與儲存（§07）</b>叢集級的連線方式與餵資料的管線。</li>
+    <li><b>電力與散熱（§08–09）</b>最終的物理天花板——一個機架現在動輒 100 kW 以上，氣冷已不可行。</li>
+  </ul>
+  <div class="callout k">
+    <p><strong>「AI Factory」</strong>是 NVIDIA 用來描述這種設施的詞：輸入電力、矽與資料，持續輸出「token」。它把資料中心當成一條生產線來設計，而不是一間機房——這也是為什麼電力與散熱被當成第一級的設計參數，而非事後工程。</p>
+  </div>
+</div></section>
+
+<!-- ════ 01 · 運算層 ════ -->
+<section id="s01"><div class="wrap rev">
+  <div class="label"><span class="n">01</span> 運算層 · Compute</div>
+  <h2>做矩陣乘法的矽，<span class="thin">一年一代往前推</span></h2>
+  <p class="lede">GPU 是 AI 資料中心的引擎。要看懂規格表，得先掌握四個結構概念，以及一條貫穿三個世代的演進線。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>架構基礎：四個關鍵概念</h3>
+  <div class="bento2">
+    <div class="card"><span class="ico">SM / Tensor Core</span><p>GPU 由數百個 <b>Streaming Multiprocessor (SM)</b> 組成，每個 SM 內含 CUDA Core（通用浮點）與 <b>Tensor Core</b>（矩陣乘加專用單元）。AI 算力幾乎全來自 Tensor Core，每一代都換新（Hopper 第 4 代 → Blackwell 第 5 代 → Rubin 第 6 代）。</p></div>
+    <div class="card"><span class="ico">Reticle Limit / Chiplet</span><p>單一晶粒的面積有光刻機的<b>光罩極限</b>。H100 已逼近此牆，因此 Blackwell 起改用<b>雙晶粒（dual-die）</b>，以 NV-HBI 10 TB/s 連接成單一邏輯 GPU；Rubin 兩顆、Rubin Ultra 四顆 compute die。</p></div>
+    <div class="card"><span class="ico">Precision / 精度格式</span><p>從 FP64 一路到 <b>FP8 / FP6 / FP4</b>。位元數越低、吞吐越高、記憶體佔用越小。Blackwell 的 Transformer Engine 導入硬體 FP4，是其推論速度暴增的主因。<b>Sparsity（2:1 稀疏）</b>可再讓標稱算力翻倍。</p></div>
+    <div class="card"><span class="ico">Process Node / 製程</span><p>代工製程（TSMC）決定電晶體密度與能效。H100 為 4N、Blackwell 為 4NP、Rubin 進入 N3（3nm）、Feynman 預計 A16（1.6nm）。製程每進一步，同功耗下算力提升。</p></div>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>NVIDIA 資料中心 GPU 世代演進</h3>
+  <p class="body">下表為單顆 GPU 規格。算力以 <em>dense</em>（非稀疏）標示為主，FP4 為 Blackwell 起的旗艦推論精度。請注意 Rubin 起 NVIDIA 改以「晶粒數」計算 GPU 數，故 VR200 NVL72 同時被稱為 NVL144。</p>
+  <div class="tbl">
+  <table class="spec">
+    <caption>NVIDIA Data Center GPU — 單顆規格對照</caption>
+    <thead><tr><th>GPU</th><th>架構 / 製程</th><th>記憶體</th><th>頻寬</th><th>FP4 (dense)</th><th>NVLink / GPU</th><th>TDP</th></tr></thead>
+    <tbody>
+      <tr><td>H100 SXM</td><td><span class="gen">Hopper · TSMC 4N</span></td><td><span class="num">80 GB</span> HBM3</td><td><span class="num">3.35 TB/s</span></td><td>不支援</td><td><span class="num">900 GB/s</span></td><td><span class="num">700 W</span></td></tr>
+      <tr><td>H200</td><td><span class="gen">Hopper · 4N</span></td><td><span class="num">141 GB</span> HBM3e</td><td><span class="num">4.8 TB/s</span></td><td>不支援</td><td><span class="num">900 GB/s</span></td><td><span class="num">700 W</span></td></tr>
+      <tr><td>B200</td><td><span class="gen">Blackwell · 4NP · 208B</span></td><td><span class="num">192 GB</span> HBM3e</td><td><span class="num">8 TB/s</span></td><td><span class="num">~9,000 TFLOPS</span></td><td><span class="num">1.8 TB/s</span></td><td><span class="num">1,000 W</span></td></tr>
+      <tr><td>B300 / Ultra</td><td><span class="gen">Blackwell Ultra · 4NP</span></td><td><span class="num">288 GB</span> HBM3e</td><td><span class="num">8 TB/s</span></td><td><span class="num">~15,000 TFLOPS</span></td><td><span class="num">1.8 TB/s</span></td><td><span class="num">1,400 W</span></td></tr>
+      <tr><td>Rubin (R200)</td><td><span class="gen">Rubin · TSMC N3 · 336B</span></td><td><span class="num">288 GB</span> HBM4</td><td><span class="num">~20–22 TB/s</span></td><td><span class="num">~50 PFLOPS</span></td><td><span class="num">3.6 TB/s</span></td><td><span class="num">~1,800 W</span></td></tr>
+      <tr><td>Rubin Ultra</td><td><span class="gen">2027 · 4 compute dies</span></td><td><span class="num">1 TB</span> HBM4e</td><td><span class="num">~32 TB/s</span></td><td><span class="num">~100 PFLOPS</span></td><td><span class="num">~7.2 TB/s</span></td><td><span class="num">~3,600 W</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <p><strong>節奏（cadence）</strong>已固定為一年一代：Blackwell (2024) → Blackwell Ultra (2025) → Rubin (2026) → Rubin Ultra (2027) → Feynman (2028, TSMC A16, 共封裝光學 CPO)。每代約帶來 3–5× 推論、2–3× 訓練的提升，但也意味著機架的供電與散熱規格每 12 個月就被改寫一次。</p>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>CPU：從 x86 主機到 ARM 協同處理器</h3>
+  <p class="body">AI 機架內的 CPU 角色已從「主機」轉為「為 GPU 餵資料的協同處理器」。NVIDIA 自研 ARM CPU 並以 <em>NVLink-C2C</em> 與 GPU 做<strong>記憶體一致</strong>連接，取代傳統的 PCIe 主機介面：</p>
+  <ul class="list">
+    <li><b>Grace</b>（Blackwell 世代）72 顆 ARM Neoverse V2 核心，TSMC N4，搭載 480 GB LPDDR5X；以 NVLink-C2C <span class="num">900 GB/s</span> 與 Blackwell GPU 共享統一記憶體位址空間。</li>
+    <li><b>Vera</b>（Rubin 世代）88 顆自研 ARM「Olympus」核心 / 176 執行緒，227B 電晶體，Arm v9.2；NVLink-C2C 升級至 <span class="num">1.8 TB/s</span>，可掛載至 1.5 TB LPDDR5X。取代 Grace。</li>
+    <li>x86（Intel Xeon / AMD EPYC）仍是 HGX 機板與多數企業伺服器的主機 CPU，透過 PCIe 連接 GPU。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>Superchip：CPU + GPU 封裝在一起</h3>
+  <p class="body">把 CPU 與 GPU 用 C2C 綁成單一模組，即為 <em>Superchip</em>。這是 NVL72 等機架的基本積木：</p>
+  <ul class="list">
+    <li><b>GB200 Superchip</b> = 2× Blackwell GPU + 1× Grace CPU，C2C 900 GB/s 連接；整顆模組 TDP 約 <span class="num">2,700 W</span>（含 2 GPU + CPU）。</li>
+    <li><b>GB300 Superchip</b> = Blackwell Ultra 版本，記憶體與網路（ConnectX-8，800 Gb/s）加倍。</li>
+    <li><b>Vera Rubin</b> 配對取代 Grace Blackwell；另有 <b>Rubin CPX</b>——專為長上下文 prefill 設計、改用 GDDR7（128 GB）而非 HBM 的特化推論加速器。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>競品與替代方案</h3>
+  <div class="tbl">
+  <table class="spec">
+    <caption>非 NVIDIA 加速器</caption>
+    <thead><tr><th>加速器</th><th>廠商 / 架構</th><th>記憶體</th><th>互連 (scale-up)</th><th>定位</th></tr></thead>
+    <tbody>
+      <tr><td>MI300X</td><td><span class="gen">AMD · CDNA 3</span></td><td><span class="num">192 GB</span> HBM3</td><td>Infinity Fabric</td><td>已量產基準</td></tr>
+      <tr><td>MI325X</td><td><span class="gen">AMD · CDNA 3</span></td><td><span class="num">256 GB</span> HBM3e</td><td>Infinity Fabric</td><td>記憶體擴充版</td></tr>
+      <tr><td>MI355X</td><td><span class="gen">AMD · CDNA 4</span></td><td><span class="num">288 GB</span> HBM3e</td><td>Infinity Fabric (8-GPU)</td><td>對標 HGX B200，1,400 W 液冷</td></tr>
+      <tr><td>MI400 / MI455X</td><td><span class="gen">AMD · CDNA Next · 2026</span></td><td><span class="num">432 GB</span> HBM4</td><td>UALink-over-Ethernet</td><td>Helios 機架，對標 VR200</td></tr>
+      <tr><td>TPU v7</td><td><span class="gen">Google · ASIC</span></td><td>HBM</td><td>3D Torus / OCS 光交換</td><td>內部 + GCP 自有雲</td></tr>
+      <tr><td>Trainium / Inferentia</td><td><span class="gen">AWS · ASIC</span></td><td>HBM</td><td>NeuronLink</td><td>AWS 自有雲</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout k">
+    <p>AMD 在<strong>記憶體容量</strong>上常領先（同代多 1.5–1.6× HBM），但在 <strong>scale-up 互連成熟度</strong>與軟體生態（CUDA vs ROCm）上落後。NVIDIA 的護城河越來越不是單顆晶片，而是 <strong>NVLink/NVSwitch 機架級 fabric</strong> 與 CUDA 軟體堆疊。</p>
+  </div>
+</div></section>
+
+<!-- ════ 02 · 記憶體層 ════ -->
+<section id="s02"><div class="wrap rev">
+  <div class="label"><span class="n">02</span> 記憶體層 · HBM</div>
+  <h2>把 DRAM 疊起來，<span class="thin">貼到 GPU 旁邊</span></h2>
+  <p class="lede">大模型的真正硬牆往往不是算力，而是「能不能把模型權重與 KV-cache 裝進記憶體、並餵得夠快」。HBM 就是為此而生。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>原理：把 DRAM 疊起來、貼到 GPU 旁邊</h3>
+  <p class="body">傳統 DRAM 透過 PCB 走線連到處理器，頻寬受限。<strong>HBM（High Bandwidth Memory）</strong>改變了物理佈局：</p>
+  <ul class="list">
+    <li><b>3D 堆疊</b>——多顆 DRAM 晶粒垂直堆疊（如 12-Hi），以 <em>TSV</em>（矽穿孔）垂直導通，形成一個「stack」。</li>
+    <li><b>2.5D 封裝</b>——HBM stack 與 GPU 晶粒並排坐在同一片<em>矽中介層（interposer）</em>上，用極寬的匯流排（每 stack 1024-bit，HBM4 加倍至 2048-bit）連接。</li>
+    <li><b>CoWoS</b>（Chip-on-Wafer-on-Substrate）——TSMC 的先進封裝技術，把 GPU die + 多顆 HBM 整合在一個封裝內。CoWoS 產能與良率是當前 AI 晶片的主要供應瓶頸之一。</li>
+  </ul>
+
+  <div class="fig rev">
+  <svg viewBox="0 0 760 250" role="img" aria-label="HBM 2.5D / 3D 封裝剖面示意圖">
+    <text x="80" y="40" class="d-lbl">剖面 · 3D 堆疊（虛線＝TSV 矽穿孔）＋ 2.5D 並排於中介層</text>
+    <!-- HBM stack L1 -->
+    <rect x="120" y="92" width="64" height="84" rx="2" class="d-box"/>
+    <line x1="120" y1="108" x2="184" y2="108" class="d-hair"/><line x1="120" y1="124" x2="184" y2="124" class="d-hair"/><line x1="120" y1="140" x2="184" y2="140" class="d-hair"/><line x1="120" y1="156" x2="184" y2="156" class="d-hair"/>
+    <line x1="152" y1="94" x2="152" y2="174" class="d-tsv"/>
+    <text x="152" y="84" text-anchor="middle" class="d-lbl">HBM</text>
+    <!-- L2 -->
+    <rect x="192" y="92" width="64" height="84" rx="2" class="d-box"/>
+    <line x1="192" y1="108" x2="256" y2="108" class="d-hair"/><line x1="192" y1="124" x2="256" y2="124" class="d-hair"/><line x1="192" y1="140" x2="256" y2="140" class="d-hair"/><line x1="192" y1="156" x2="256" y2="156" class="d-hair"/>
+    <line x1="224" y1="94" x2="224" y2="174" class="d-tsv"/>
+    <text x="224" y="84" text-anchor="middle" class="d-lbl">HBM</text>
+    <!-- GPU die -->
+    <rect x="300" y="92" width="160" height="84" rx="3" class="d-box" style="stroke:var(--accent)"/>
+    <text x="380" y="138" text-anchor="middle" class="d-t">GPU DIE</text>
+    <!-- R1 -->
+    <rect x="476" y="92" width="64" height="84" rx="2" class="d-box"/>
+    <line x1="476" y1="108" x2="540" y2="108" class="d-hair"/><line x1="476" y1="124" x2="540" y2="124" class="d-hair"/><line x1="476" y1="140" x2="540" y2="140" class="d-hair"/><line x1="476" y1="156" x2="540" y2="156" class="d-hair"/>
+    <line x1="508" y1="94" x2="508" y2="174" class="d-tsv"/>
+    <text x="508" y="84" text-anchor="middle" class="d-lbl">HBM</text>
+    <!-- R2 -->
+    <rect x="548" y="92" width="64" height="84" rx="2" class="d-box"/>
+    <line x1="548" y1="108" x2="612" y2="108" class="d-hair"/><line x1="548" y1="124" x2="612" y2="124" class="d-hair"/><line x1="548" y1="140" x2="612" y2="140" class="d-hair"/><line x1="548" y1="156" x2="612" y2="156" class="d-hair"/>
+    <line x1="580" y1="94" x2="580" y2="174" class="d-tsv"/>
+    <text x="580" y="84" text-anchor="middle" class="d-lbl">HBM</text>
+    <!-- interposer -->
+    <rect x="110" y="176" width="540" height="26" rx="2" class="d-box"/>
+    <text x="380" y="193" text-anchor="middle" class="d-lbl">矽中介層 · INTERPOSER（2.5D · 1024 → 2048-bit 匯流排）</text>
+    <!-- substrate -->
+    <rect x="80" y="202" width="600" height="30" rx="3" class="d-box"/>
+    <text x="380" y="221" text-anchor="middle" class="d-lbl">封裝基板 · SUBSTRATE</text>
+  </svg>
+  <p class="fcap">CoWoS 的側視剖面：多顆 DRAM 晶粒<b>垂直 3D 堆疊</b>（虛線＝TSV 矽穿孔），與 GPU 晶粒<b>並排</b>坐在同一片矽中介層上（2.5D），再一起封進基板。HBM4 的關鍵不是拉高 pin 速率，而是把每 stack 的匯流排從 1024-bit 加倍到 2048-bit。</p>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>HBM 世代演進</h3>
+  <div class="tbl">
+  <table class="spec">
+    <caption>HBM 規格與對應 GPU</caption>
+    <thead><tr><th>世代</th><th>代表 GPU</th><th>單卡容量</th><th>單卡頻寬</th><th>每 pin 速率</th><th>匯流排</th></tr></thead>
+    <tbody>
+      <tr><td>HBM3</td><td>H100</td><td><span class="num">80 GB</span></td><td><span class="num">3.35 TB/s</span></td><td><span class="num">~5.2 Gbps</span></td><td>1024-bit/stack</td></tr>
+      <tr><td>HBM3e</td><td>H200 · B200 · B300 · MI350</td><td><span class="num">141–288 GB</span></td><td><span class="num">~8 TB/s</span></td><td><span class="num">~8+ Gbps</span></td><td>1024-bit/stack</td></tr>
+      <tr><td>HBM4</td><td>Rubin · MI400</td><td><span class="num">288–432 GB</span></td><td><span class="num">~20–22 TB/s</span></td><td><span class="num">~10–11 Gbps</span></td><td>2048-bit/stack</td></tr>
+      <tr><td>HBM4e</td><td>Rubin Ultra</td><td><span class="num">~1 TB</span></td><td><span class="num">~32 TB/s</span></td><td>—</td><td>2048-bit/stack</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="body">HBM4 的關鍵躍進是<strong>把每個 stack 的介面寬度從 1024-bit 加倍到 2048-bit</strong>，這也是頻寬一舉拉到 20 TB/s 級的主因，而非單純拉高 pin 速率。</p>
+  <div class="callout">
+    <p><strong>供應鏈現實</strong>：HBM 由 SK Hynix、Samsung、Micron 三家供應，是整個 AI 硬體中最緊俏的環節之一。NVIDIA 對 Rubin 的 HBM4 頻寬目標曾從 13 → 20.5 → 22 TB/s 反覆調整，反映出記憶體供應商能否達標，直接決定了旗艦 GPU 的最終規格。</p>
+  </div>
+</div></section>
+
+<!-- ════ 03 · Scale-Up 互連 ════ -->
+<section id="s03"><div class="wrap rev">
+  <div class="label"><span class="n">03</span> Scale-Up 互連 · In-Rack Fabric</div>
+  <h2>讓一櫃 GPU，<span class="thin">表現得像一顆超大 GPU</span></h2>
+  <p class="lede">這是 NVIDIA 最深的護城河。Scale-up fabric 讓一櫃 GPU 表現得像「一顆超大 GPU」，靠的是銅線、而非光纖。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>NVLink：GPU 對 GPU 的高速通道</h3>
+  <p class="body"><em>NVLink</em> 是 GPU 之間的點對點高速連結，頻寬遠勝 PCIe（PCIe Gen5 ×16 僅約 128 GB/s）。每一代翻倍：</p>
+  <ul class="list">
+    <li><b>NVLink 4</b>（Hopper）每 GPU <span class="num">900 GB/s</span></li>
+    <li><b>NVLink 5</b>（Blackwell）每 GPU <span class="num">1.8 TB/s</span>，約為 PCIe Gen5 的 14×</li>
+    <li><b>NVLink 6</b>（Rubin）每 GPU <span class="num">3.6 TB/s</span></li>
+    <li><b>NVLink 7</b>（Rubin Ultra）持續倍增，支撐 576-GPU domain</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>NVSwitch：把所有 GPU 連成 all-to-all</h3>
+  <p class="body">單靠點對點 NVLink 無法讓 72 顆 GPU 兩兩全互連。<em>NVSwitch</em> 是專用交換晶片，做出「任一 GPU 可全速存取任一 GPU 記憶體」的拓撲。在 GB200 NVL72 中，9 個 switch tray 內的 NVSwitch 4.0 提供整櫃 <span class="num">130 TB/s</span> 的 all-to-all 頻寬，且任意 GPU 間延遲低於 <span class="num">300 ns</span>，使整櫃可被當成單一加速器來編程。NVSwitch 4.0 單晶片即達 14.4 TB/s 聚合頻寬。</p>
+
+  <div class="fig rev">
+  <svg viewBox="0 0 760 300" role="img" aria-label="點對點 NVLink 與經 NVSwitch 的 all-to-all 拓撲對照">
+    <line x1="380" y1="28" x2="380" y2="284" class="d-hair"/>
+    <!-- LEFT: point-to-point -->
+    <text x="180" y="34" text-anchor="middle" class="d-t">點對點 NVLINK</text>
+    <text x="180" y="52" text-anchor="middle" class="d-lbl">連線數 ~ N² · GPU 一多就接不完</text>
+    <line x1="101" y1="119" x2="259" y2="119" class="d-acc"/>
+    <line x1="101" y1="219" x2="259" y2="219" class="d-acc"/>
+    <line x1="101" y1="119" x2="101" y2="219" class="d-acc"/>
+    <line x1="259" y1="119" x2="259" y2="219" class="d-acc"/>
+    <rect x="72" y="96" width="58" height="46" rx="3" class="d-box"/><text x="101" y="123" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="230" y="96" width="58" height="46" rx="3" class="d-box"/><text x="259" y="123" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="72" y="196" width="58" height="46" rx="3" class="d-box"/><text x="101" y="223" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="230" y="196" width="58" height="46" rx="3" class="d-box"/><text x="259" y="223" text-anchor="middle" class="d-t2">GPU</text>
+    <!-- RIGHT: via NVSwitch -->
+    <text x="582" y="34" text-anchor="middle" class="d-acct">經 NVSWITCH</text>
+    <text x="582" y="52" text-anchor="middle" class="d-lbl">ALL-TO-ALL · 任一 ↔ 任一</text>
+    <line x1="582" y1="173" x2="582" y2="92" class="d-acc"/>
+    <line x1="582" y1="173" x2="582" y2="256" class="d-acc"/>
+    <line x1="582" y1="173" x2="466" y2="172" class="d-acc"/>
+    <line x1="582" y1="173" x2="726" y2="172" class="d-acc"/>
+    <rect x="540" y="150" width="84" height="46" rx="3" class="d-box" style="stroke:var(--accent)"/><text x="582" y="177" text-anchor="middle" class="d-t">NVSWITCH</text>
+    <rect x="554" y="72" width="56" height="40" rx="3" class="d-box"/><text x="582" y="96" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="554" y="236" width="56" height="40" rx="3" class="d-box"/><text x="582" y="260" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="438" y="152" width="56" height="40" rx="3" class="d-box"/><text x="466" y="176" text-anchor="middle" class="d-t2">GPU</text>
+    <rect x="698" y="152" width="56" height="40" rx="3" class="d-box"/><text x="726" y="176" text-anchor="middle" class="d-t2">GPU</text>
+  </svg>
+  <p class="fcap">左：純<b>點對點</b> NVLink，GPU 一多就兩兩接不完、無法全速全互連。右：<b>NVSwitch</b> 作為交換中樞，讓任一 GPU 全速存取任一 GPU 的記憶體（all-to-all）——GB200 NVL72 用 9 個 switch tray 做出整櫃 130 TB/s、延遲 &lt;300 ns，整櫃因此能被當成「一顆 GPU」來編程。</p>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>NVLink-C2C 與 NVLink Domain</h3>
+  <p class="body"><em>NVLink-C2C</em> 把同樣的技術用在 CPU↔GPU 之間，做出<strong>快取一致（cache-coherent）</strong>的統一記憶體——GPU 可直接讀 CPU 的 LPDDR5X、CPU 也可讀 GPU 的 HBM，無需顯式複製。<strong>NVLink domain（world size）</strong>是 scale-up 的核心指標，指「能以 NVLink 全互連的最大 GPU 數」：</p>
+  <div class="tbl">
+  <table class="spec">
+    <caption>NVLink Domain 演進</caption>
+    <thead><tr><th>系統</th><th>Domain 大小</th><th>每 GPU 頻寬</th><th>聚合 all-to-all</th></tr></thead>
+    <tbody>
+      <tr><td>HGX H100/H200</td><td><span class="num">8 GPU</span>（單機板）</td><td><span class="num">900 GB/s</span></td><td>—</td></tr>
+      <tr><td>GB200 NVL72</td><td><span class="num">72 GPU</span>（整櫃）</td><td><span class="num">1.8 TB/s</span></td><td><span class="num">130 TB/s</span></td></tr>
+      <tr><td>VR200 NVL72/144</td><td><span class="num">72 封裝 / 144 die</span></td><td><span class="num">3.6 TB/s</span></td><td><span class="num">~260 TB/s</span></td></tr>
+      <tr><td>Kyber NVL576</td><td><span class="num">576 die</span>（整櫃）</td><td><span class="num">~7.2 TB/s</span></td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>競爭標準：UALink 與 Infinity Fabric</h3>
+  <p class="body">AMD 與 Intel、Google、Microsoft 推動開放標準 <em>UALink</em>（Ultra Accelerator Link）對抗封閉的 NVLink。AMD 內部以 <em>Infinity Fabric</em> 做 8-GPU 全互連；MI400 的 Helios 機架採「UALink-over-Ethernet」，scale-up domain 同樣達 72 顆、260 TB/s。但截至 2026 年中，UALink 尚無大規模量產部署，互連成熟度仍是 AMD 在 frontier 級訓練上的主要劣勢。</p>
+</div></section>
+
+<!-- ════ 04 · Scale-Out 互連 ════ -->
+<section id="s04"><div class="wrap rev">
+  <div class="label"><span class="n">04</span> Scale-Out 互連 · Cluster Fabric</div>
+  <h2>把上千個機架，<span class="thin">連成一座叢集</span></h2>
+  <p class="lede">當模型大到一個 NVLink domain 也裝不下，就得把成百上千個機架連成叢集。這層走光纖、用 RDMA，是 scale-out 的領域。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>InfiniBand：HPC 與 turnkey 叢集的主力</h3>
+  <p class="body"><em>InfiniBand（IB）</em>是低延遲、原生支援 <em>RDMA</em>（遠端直接記憶體存取，繞過 CPU）的網路，長年主導超算與 NVIDIA DGX SuperPOD 等整機方案。其獨門武器是 <em>SHARP</em>（In-Network Computing）——把 all-reduce 等集合運算直接在交換器內完成，最高可加速集合通訊達 32×。</p>
+  <ul class="list">
+    <li><b>NDR</b>——每埠 <span class="num">400 Gb/s</span>，Quantum-2 交換器（64×400G），PAM4 調變。</li>
+    <li><b>XDR</b>——每埠 <span class="num">800 Gb/s</span>，Quantum-X800 交換器（144×800G，Quantum-3 ASIC，整合矽光子）。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>Ethernet 的反攻：Spectrum-X 與 Ultra Ethernet</h3>
+  <p class="body">超大規模業者偏好以 Ethernet 統一網路。為此 NVIDIA 推出 <em>Spectrum-X</em>——針對 AI 流量優化、跑 RoCE（RDMA over Converged Ethernet）的 Ethernet 平台；Rubin 世代的 Spectrum-6 更採共封裝光學（CPO）。業界則以 <em>Ultra Ethernet（UEC）</em>聯盟標準，把 Ethernet 改造成可與 IB 競爭的 AI fabric。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>端點：NIC / SuperNIC 與 DPU</h3>
+  <ul class="list">
+    <li><b>ConnectX SuperNIC</b>——伺服器端的網卡。ConnectX-7（400G）→ ConnectX-8（800G）→ ConnectX-9（1.6 Tb/s，Rubin 世代）。AMD 對應為 Pensando「Vulcano」/「Pollara」。</li>
+    <li><b>BlueField DPU</b>——資料處理單元，把網路、儲存、安全、虛擬化的工作從 CPU 卸載。BlueField-4 內含 64 核 Grace CPU + ConnectX-9。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>兩個維度的對照</h3>
+  <div class="tbl">
+  <table class="spec">
+    <caption>Scale-Up vs Scale-Out</caption>
+    <thead><tr><th>維度</th><th>Scale-Up</th><th>Scale-Out</th></tr></thead>
+    <tbody>
+      <tr><td>技術</td><td>NVLink / NVSwitch / UALink</td><td>InfiniBand / Ethernet</td></tr>
+      <tr><td>媒介</td><td>銅纜（機架內，短距）</td><td>光纖（跨機架，長距）</td></tr>
+      <tr><td>頻寬 / GPU</td><td><span class="num">1.8–3.6 TB/s</span></td><td><span class="num">400–1,600 Gb/s</span></td></tr>
+      <tr><td>記憶體一致</td><td>是（統一位址空間）</td><td>否（顯式 RDMA 搬移）</td></tr>
+      <tr><td>規模</td><td><span class="num">8–576 GPU</span></td><td>數千～數十萬 GPU</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div></section>
+
+<!-- ════ 05 · 系統與機架架構 ════ -->
+<section id="s05"><div class="wrap rev">
+  <div class="label"><span class="n">05</span> 系統與機架 · Rack-Scale</div>
+  <h2>把整套硬體，<span class="thin">縫合成一台加速器</span></h2>
+  <p class="lede">把晶片、記憶體與兩張網組裝成可運轉的系統，有三種封裝層級——機板、機架、與整套參考設計。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>三種系統封裝：DGX / HGX / MGX</h3>
+  <div class="bento">
+    <div class="card"><span class="ico">DGX</span><p>NVIDIA 自家的<b>整機方案（turnkey）</b>，軟硬體整合、開箱即用，附 NVIDIA 支援。例：DGX B200、DGX SuperPOD。</p></div>
+    <div class="card"><span class="ico">HGX</span><p><b>8-GPU 基板（baseboard）</b>，賣給 OEM（Dell、Supermicro、HPE 等）自行組裝成伺服器。是「一台 8 卡 GPU 伺服器」的標準積木。</p></div>
+    <div class="card"><span class="ico">MGX</span><p><b>模組化機架參考架構</b>，GB200 NVL72 與 VR200 即衍生自 MGX。NVIDIA 已將其貢獻給 OCP（開放運算計畫），讓生態夥伴共用設計、縮短部署時間達 50%。</p></div>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>解剖 GB200 NVL72：一個機架的內臟</h3>
+  <p class="body">NVL72 是當前 AI 機架的範本。它不是「72 台伺服器」，而是一台被液冷與銅纜縫合成的單一加速器：</p>
+  <ul class="list">
+    <li><b>18× compute tray</b>（1U）——每 tray 含 2 顆 Grace + 4 顆 Blackwell（即 2 個 GB200 Superchip）。</li>
+    <li><b>9× NVLink switch tray</b>——內含 NVSwitch 4.0 晶片，構成整櫃 all-to-all fabric。</li>
+    <li><b>NVLink 銅纜背板</b>——4 個 cartridge、超過 <span class="num">5,000 條</span>同軸銅纜（含 144 條 NVLink 銅纜）。整櫃 scale-up 全靠這片銅背板，是 NVL72 的標誌。</li>
+    <li><b>電力子系統</b>——8 個 power shelf（每個 6× 5.5 kW PSU、N+N 冗餘），把 AC 轉成 ~50 V DC，經 <em>busbar</em>（匯流排）分配給各 tray。</li>
+    <li><b>液冷歧管（manifold）</b>——把冷卻液送進每個 cold plate，整櫃 72 條冷卻管。</li>
+  </ul>
+  <div class="tbl">
+  <table class="spec">
+    <caption>GB200 NVL72 系統級規格</caption>
+    <thead><tr><th>項目</th><th>數值</th></tr></thead>
+    <tbody>
+      <tr><td>GPU / CPU</td><td>72× Blackwell GPU + 36× Grace CPU</td></tr>
+      <tr><td>統一 HBM 記憶體</td><td><span class="num">~13.4 TB</span> HBM3e</td></tr>
+      <tr><td>FP4 算力</td><td><span class="num">1.44 EFLOPS</span>（sparse）/ 720 PFLOPS dense</td></tr>
+      <tr><td>NVLink all-to-all</td><td><span class="num">130 TB/s</span></td></tr>
+      <tr><td>機架功耗</td><td><span class="num">~120 kW</span></td></tr>
+      <tr><td>重量 / 點荷重</td><td><span class="num">~1,500 kg</span> / ~1,875 kg/m²（需強化地板）</td></tr>
+      <tr><td>對外網路</td><td>8× 400GbE = 3.2 Tb/s</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>機架世代演進</h3>
+  <div class="tbl">
+  <table class="spec">
+    <caption>Rack-Scale 系統世代</caption>
+    <thead><tr><th>機架</th><th>世代 / 年份</th><th>GPU 數</th><th>功耗</th><th>供電 / 散熱</th></tr></thead>
+    <tbody>
+      <tr><td>DGX H100 (8-GPU 節點)</td><td><span class="gen">Hopper</span></td><td>8 / node</td><td><span class="num">~40 kW</span></td><td>AC · 氣冷</td></tr>
+      <tr><td>GB200 NVL72</td><td><span class="gen">Blackwell · 2024</span></td><td>72</td><td><span class="num">~120 kW</span></td><td>AC · 強制液冷</td></tr>
+      <tr><td>GB300 NVL72</td><td><span class="gen">Blackwell Ultra · 2025</span></td><td>72</td><td><span class="num">~135 kW+</span></td><td>AC · 液冷</td></tr>
+      <tr><td>VR200 NVL72/144</td><td><span class="gen">Rubin · H2 2026</span></td><td>72 封裝</td><td><span class="num">~190–230 kW</span></td><td>AC · 全液冷（無風扇）</td></tr>
+      <tr><td>Kyber NVL576</td><td><span class="gen">Rubin Ultra · H2 2027</span></td><td>576 die</td><td><span class="num">~600 kW</span></td><td>800 VDC · 液冷 + sidecar</td></tr>
+      <tr><td>Helios</td><td><span class="gen">AMD MI400 · 2026</span></td><td>72</td><td>—</td><td>UALink-over-Ethernet · 液冷</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout k">
+    <p>每一代機架都讓上一代的<strong>電氣與機械設計失效</strong>：地板荷重、供電饋線（GB300 的 60 A → VR200 的 100 A）、冷卻液流量都被重寫。設施的設計前置期約需 24 個月，意味著要在 2027 部署 Kyber，電氣改造現在就得啟動。</p>
+  </div>
+</div></section>
+
+<!-- ════ 06 · 網路拓撲 ════ -->
+<section id="s06"><div class="wrap rev">
+  <div class="label"><span class="n">06</span> 網路拓撲 · Topology</div>
+  <h2>怎麼連，<span class="thin">和用什麼連一樣重要</span></h2>
+  <p class="lede">把幾千個機架連成叢集時，「怎麼連」和「用什麼連」一樣重要。AI 流量的特性，決定了拓撲不能照搬傳統企業網路。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>三張獨立的網</h3>
+  <p class="body">一座 AI 叢集通常同時跑三張彼此獨立的 fabric，互不干擾：</p>
+  <ul class="list">
+    <li><b>Compute fabric（運算網）</b>——GPU 間的梯度同步主幹，最高頻寬、最在意延遲，採 rail-optimized fat-tree（IB 或 Spectrum-X）。</li>
+    <li><b>Storage fabric（儲存網）</b>——獨立於運算網以免互搶頻寬，走 IB 或 RoCE，每節點至少 40 GB/s。</li>
+    <li><b>Management fabric（管理網）</b>——Ethernet，負責開機佈建、監控、對外存取。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>三種拓撲</h3>
+  <div class="bento">
+    <div class="card"><span class="ico">Fat-Tree（胖樹）</span><p>NVIDIA 預設拓撲，提供 <b>full bisection bandwidth</b>（任意兩半之間頻寬等於單側總頻寬）。三層架構搭 64 埠交換器可擴展到 32,768 個端點。代價是交換器數量多、成本高。</p></div>
+    <div class="card"><span class="ico">Rail-Optimized</span><p>超大規模 AI 叢集的參考設計。把每顆 GPU 的網卡（一條「rail」）接到<b>不同的 leaf 交換器</b>，讓跨節點通訊只需一跳、並與機內 NVLink 路徑對齊，大幅降延遲。</p></div>
+    <div class="card"><span class="ico">Dragonfly+</span><p>以更少的 hop 數與交換器成本，支撐超過百萬節點的規模，但需要 <b>adaptive routing</b>。適合超大叢集的成本優化。</p></div>
+  </div>
+
+  <div class="fig rev">
+  <svg viewBox="0 0 760 320" role="img" aria-label="Fat-Tree 與 Rail-Optimized 網路拓撲對照">
+    <line x1="380" y1="28" x2="380" y2="300" class="d-hair"/>
+    <!-- LEFT: fat-tree -->
+    <text x="182" y="32" text-anchor="middle" class="d-t">FAT-TREE</text>
+    <text x="182" y="50" text-anchor="middle" class="d-lbl">脊葉全連接 · 全二分頻寬</text>
+    <!-- spine-leaf mesh (draw lines first) -->
+    <line x1="122" y1="92" x2="69" y2="150" class="d-line"/><line x1="122" y1="92" x2="183" y2="150" class="d-line"/><line x1="122" y1="92" x2="297" y2="150" class="d-line"/>
+    <line x1="244" y1="92" x2="69" y2="150" class="d-line"/><line x1="244" y1="92" x2="183" y2="150" class="d-line"/><line x1="244" y1="92" x2="297" y2="150" class="d-line"/>
+    <!-- leaf to hosts -->
+    <line x1="69" y1="176" x2="57" y2="228" class="d-line"/><line x1="69" y1="176" x2="91" y2="228" class="d-line"/>
+    <line x1="183" y1="176" x2="171" y2="228" class="d-line"/><line x1="183" y1="176" x2="205" y2="228" class="d-line"/>
+    <line x1="297" y1="176" x2="285" y2="228" class="d-line"/><line x1="297" y1="176" x2="309" y2="228" class="d-line"/>
+    <!-- spines -->
+    <rect x="88" y="66" width="68" height="26" rx="3" class="d-box"/><text x="122" y="83" text-anchor="middle" class="d-lbl">SPINE</text>
+    <rect x="210" y="66" width="68" height="26" rx="3" class="d-box"/><text x="244" y="83" text-anchor="middle" class="d-lbl">SPINE</text>
+    <!-- leaves -->
+    <rect x="40" y="150" width="58" height="24" rx="3" class="d-box"/><text x="69" y="166" text-anchor="middle" class="d-lbl">LEAF</text>
+    <rect x="154" y="150" width="58" height="24" rx="3" class="d-box"/><text x="183" y="166" text-anchor="middle" class="d-lbl">LEAF</text>
+    <rect x="268" y="150" width="58" height="24" rx="3" class="d-box"/><text x="297" y="166" text-anchor="middle" class="d-lbl">LEAF</text>
+    <!-- hosts -->
+    <rect x="46" y="228" width="22" height="22" rx="2" class="d-box"/><rect x="80" y="228" width="22" height="22" rx="2" class="d-box"/>
+    <rect x="160" y="228" width="22" height="22" rx="2" class="d-box"/><rect x="194" y="228" width="22" height="22" rx="2" class="d-box"/>
+    <rect x="274" y="228" width="22" height="22" rx="2" class="d-box"/><rect x="298" y="228" width="22" height="22" rx="2" class="d-box"/>
+    <text x="182" y="276" text-anchor="middle" class="d-t2">交換器多、成本高，但任意兩半都跑滿</text>
+    <!-- RIGHT: rail-optimized -->
+    <text x="576" y="32" text-anchor="middle" class="d-acct">RAIL-OPTIMIZED</text>
+    <text x="576" y="50" text-anchor="middle" class="d-lbl">每條 RAIL 接不同 LEAF · 對齊 NVLINK</text>
+    <!-- rails to GPUs (lines first) -->
+    <line x1="454" y1="232" x2="484" y2="106" class="d-acc"/><line x1="624" y1="232" x2="484" y2="106" class="d-acc"/>
+    <line x1="494" y1="232" x2="580" y2="106" class="d-acc"/><line x1="664" y1="232" x2="580" y2="106" class="d-acc"/>
+    <line x1="534" y1="232" x2="676" y2="106" class="d-acc"/><line x1="704" y1="232" x2="676" y2="106" class="d-acc"/>
+    <!-- rail leaves -->
+    <rect x="452" y="80" width="64" height="26" rx="3" class="d-box"/><text x="484" y="97" text-anchor="middle" class="d-lbl">RAIL 1</text>
+    <rect x="548" y="80" width="64" height="26" rx="3" class="d-box"/><text x="580" y="97" text-anchor="middle" class="d-lbl">RAIL 2</text>
+    <rect x="644" y="80" width="64" height="26" rx="3" class="d-box"/><text x="676" y="97" text-anchor="middle" class="d-lbl">RAIL 3</text>
+    <!-- nodes -->
+    <rect x="430" y="210" width="140" height="70" rx="3" class="d-box2"/><text x="500" y="228" text-anchor="middle" class="d-lbl">NODE A</text>
+    <rect x="600" y="210" width="140" height="70" rx="3" class="d-box2"/><text x="670" y="228" text-anchor="middle" class="d-lbl">NODE B</text>
+    <rect x="438" y="232" width="32" height="38" rx="2" class="d-box"/><rect x="478" y="232" width="32" height="38" rx="2" class="d-box"/><rect x="518" y="232" width="32" height="38" rx="2" class="d-box"/>
+    <rect x="608" y="232" width="32" height="38" rx="2" class="d-box"/><rect x="648" y="232" width="32" height="38" rx="2" class="d-box"/><rect x="688" y="232" width="32" height="38" rx="2" class="d-box"/>
+    <text x="576" y="300" text-anchor="middle" class="d-t2">跨節點同一條 rail 只需一跳</text>
+  </svg>
+  <p class="fcap">左 <b>Fat-Tree</b>：脊（spine）與葉（leaf）全連接，提供 full bisection bandwidth——任意兩半之間都能跑滿，代價是交換器多、貴。右 <b>Rail-Optimized</b>：把每顆 GPU 的網卡（一條 rail）接到<b>不同 leaf</b>，跨節點走同一條 rail 只需一跳、並與機內 NVLink 路徑對齊，大幅降延遲——這是超大規模 AI 叢集的參考設計。</p>
+  </div>
+
+  <div class="callout">
+    <p><strong>SuperPOD</strong> 是 NVIDIA 的叢集參考架構（如以 Quantum-X800 連接的 B300 SuperPOD），把上述拓撲、佈線規範、儲存與管理網打包成可複製的藍圖。網路設定錯誤的代價極高——Meta 的研究指出，網路相關問題造成其 GPU 任務失敗的 <strong>10.7%</strong>。</p>
+  </div>
+</div></section>
+
+<!-- ════ 07 · 儲存層 ════ -->
+<section id="s07"><div class="wrap rev">
+  <div class="label"><span class="n">07</span> 儲存層 · Storage</div>
+  <h2>GPU 再快，<span class="thin">餵不飽也是空轉</span></h2>
+  <p class="lede">GPU 再快，餵不飽也是空轉。儲存層的任務是用對的成本，在對的速度把訓練資料與 checkpoint 送到 GPU 面前。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>四階儲存階層</h3>
+  <ul class="list">
+    <li><b>HBM（GPU 內）</b>——最快、最貴、最小。模型權重與 activation 的工作集。</li>
+    <li><b>本地 NVMe SSD（節點內）</b>——暫存、資料集快取、spill。</li>
+    <li><b>高效平行檔案系統（共享）</b>——餵資料與寫 checkpoint 的主力，需數十～數百 GB/s 聚合吞吐。</li>
+    <li><b>物件 / 容量儲存與歸檔</b>——原始資料湖、冷資料，以容量與單位成本為優先。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>平行檔案系統與 GPUDirect</h3>
+  <p class="body">共享層常見方案：<em>Lustre</em>、<em>IBM Storage Scale（GPFS）</em>、<em>WEKA</em>、<em>VAST Data</em>、<em>DAOS</em>。它們把資料條帶化（striping）到多個儲存節點以堆疊頻寬。關鍵加速技術是 <em>GPUDirect Storage</em>——讓資料從 NVMe / 網路<strong>直接 DMA 進 GPU 記憶體</strong>，繞過 CPU 與系統記憶體的中轉，消除瓶頸。儲存流量同樣走 IB 或 RoCE，並刻意與 compute fabric 分離，避免在 checkpoint 時與梯度同步互搶頻寬。</p>
+</div></section>
+
+<!-- ════ 08 · 電力架構 ════ -->
+<section id="s08"><div class="wrap rev">
+  <div class="label"><span class="n">08</span> 電力架構 · Power</div>
+  <h2>供電，<span class="thin">從基礎建設變成產品本身</span></h2>
+  <p class="lede">當一個機架的功耗從 40 kW 衝到 600 kW，供電就從「基礎建設」變成了「產品本身」。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>機架功率密度的爆炸</h3>
+  <p class="body">五年內，部署單位從「機房供得起的一個機架」變成「吃掉一座小工廠用電的一個機架」：HPC/Hopper ~40 kW → GB200 ~120 kW → VR200 ~190–230 kW → Kyber ~600 kW，並朝 1 MW 前進。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>供電鏈：從電網到晶片</h3>
+  <p class="body">傳統 AC 供電鏈為：</p>
+  <div class="flow"><code>變電站 → 變壓器 → 開關設備 → UPS（電池）→ PDU → busway → 機架 power shelf → PSU（AC→DC）→ busbar → tray</code></div>
+  <p class="body">每一級都有轉換損耗與冗餘需求（N+1 / N+N）。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>800 VDC：為了 600 kW 機架的必要轉向</h3>
+  <p class="body">在 Kyber 這種 600 kW 級密度下，傳統 415/480 VAC 的銅排會粗到不可行。NVIDIA 於 2025 年提出 <em>800 VDC</em> 設施對機架的直流供電架構：</p>
+  <ul class="list">
+    <li>同樣截面的銅可多傳輸 <span class="num">150%+</span> 的電力，每機架省下約 200 kg 銅排。</li>
+    <li>把整流（AC→DC）集中到 <em>sidecar</em> 電力機架，緊鄰 compute 機架擺放，取代傳統 UPS / PDU / busway 鏈。</li>
+    <li>per-rack 饋線電流從 GB300 的 60 A 跳到 VR200 的 100 A。</li>
+  </ul>
+  <div class="callout k">
+    <p><strong>給容量規劃的提醒</strong>：以一座 10 MW 的 AIDC 為例，若採 GB200（~120 kW/櫃）約可佈 ~80 櫃；若升級到 VR200（~200 kW/櫃）則同樣 10 MW 只能擺 ~50 櫃。電力預算（而非機房面積）才是決定 GPU 數量的真正上限——這也是計費模型裡「每 GPU-hour 攤提」的物理根源。</p>
+  </div>
+</div></section>
+
+<!-- ════ pull-quote ════ -->
+<div class="wrap"><div class="pull rev">
+  <div class="q">電力預算，而非機房面積，<b>才是決定 GPU 數量的真正上限。</b></div>
+  <div class="who">§08 · 電力架構</div>
+</div></div>
+
+<!-- ════ 09 · 散熱架構 ════ -->
+<section id="s09"><div class="wrap rev">
+  <div class="label"><span class="n">09</span> 散熱架構 · Cooling</div>
+  <h2>Blackwell 起，<span class="thin">液冷不再是選項</span></h2>
+  <p class="lede">Blackwell 起，液冷不再是選項，而是物理上的強制要求。這一層往往是 AIDC 設計裡最被低估、卻最先觸頂的限制。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>為什麼氣冷已經出局</h3>
+  <p class="body">一個標準氣冷機架的上限約 8–25 kW；而 GB200 NVL72 單櫃就 120 kW+，是氣冷天花板的 5–15 倍。更根本的是<strong>熱通量（heat flux）</strong>：Blackwell GPU 晶粒達 500–600 W/cm²（接近火箭引擎燃燒室等級），遠超氣冷散熱片所能處理的 5–15 W/cm²。NVIDIA 已正式確認 GB200 NVL72 強制液冷。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>液冷的幾種形態</h3>
+  <div class="bento">
+    <div class="card"><span class="ico">Direct-to-Chip (DLC)</span><p>當前主流。<b>cold plate（冷板）</b>直接貼在晶片上，內走微流道冷卻液（每模組 ~2–3 L/min、入水溫 30–45°C）。Blackwell / Rubin 機架的標配。</p></div>
+    <div class="card"><span class="ico">Rear-Door HX (RDHx)</span><p>後門式熱交換器，裝在機架背門以水冷散去排出的熱風。適合中等密度或既有機房改造。</p></div>
+    <div class="card"><span class="ico">Immersion（浸沒）</span><p>把整台伺服器泡進絕緣冷卻液，分單相與兩相。散熱效率最高，但對機房設計與維運改動最大。</p></div>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>CDU、暖水迴路與 PUE</h3>
+  <ul class="list">
+    <li><b>CDU（Coolant Distribution Unit）</b>——把設施側水迴路與機架側技術迴路隔開，是液冷部署的容量設計核心，再經 manifold 把冷卻液分配到各 cold plate。</li>
+    <li><b>暖水冷卻（warm-water）</b>——用較高溫的進水即可帶走熱，讓設施能<b>免冰機（free cooling）</b>運轉，大幅降低能耗。</li>
+    <li><b>PUE（Power Usage Effectiveness）</b>——設施總用電 ÷ IT 用電，越接近 1.0 越好。液冷 + 暖水可把 PUE 壓得比氣冷低很多。VR200 的 compute/switch tray 已完全無風扇，冷卻液流量約為 GB300 的 2×、機架風流需求則降約 80%。</li>
+  </ul>
+</div></section>
+
+<!-- ════ 10 · 成本與 TCO ════ -->
+<section id="s10"><div class="wrap rev">
+  <div class="label"><span class="n">10</span> 成本與 TCO · Economics</div>
+  <h2>最終一切，<span class="thin">折算成每 GPU-hour</span></h2>
+  <p class="lede">所有上述硬體，最終會被折算成一個數字：每 GPU-hour 的成本。理解 TCO 的組成，是設計任何 GPU 計費模型的前提。</p>
+
+  <h3 class="subhead"><span class="mk">▸</span>TCO 的兩個構面</h3>
+  <div class="bento2">
+    <div class="card"><span class="ico">CapEx · 資本支出</span><p>GPU 本身（單顆 Blackwell ~$30–50k）、一櫃 NVL72 ~$3–4M、網路設備、以及設施興建（百櫃級部署的機房建置可達 $100M）。HBM 與 CoWoS 先進封裝是晶片成本的大頭。</p></div>
+    <div class="card"><span class="ico">OpEx · 營運支出</span><p>電力（最大宗）、冷卻、維運與人力。以單套系統粗估，年營運成本約 $1M：電力 ~$400k、冷卻 ~$100k、設施/維護 ~$500k。</p></div>
+  </div>
+
+  <h3 class="subhead"><span class="mk">▸</span>從 TCO 推導每 GPU-hour 成本</h3>
+  <p class="body">單位成本（unit cost）的骨架可寫成：</p>
+  <div class="flow"><code>每 GPU-hour 成本 ≈ (攤提 CapEx + 期間 OpEx) ÷ (GPU 數 × 時數 × 利用率)</code></div>
+  <ul class="list">
+    <li><b>利用率（utilization）是槓桿</b>——同樣的 CapEx，80% 利用率 vs 40% 利用率，攤到每 GPU-hour 的成本差近一倍。提升利用率（排程、quota、超賣策略）往往比壓低硬體採購價更有效。</li>
+    <li><b>電力是 OpEx 主軸</b>——機架功率密度（§08）直接決定電費攤提；這也是為何 cost-per-GPU-hour 與 PUE、kW/櫃 緊密相關。</li>
+    <li><b>unit cost ≠ unit price</b>——成本是上述攤提；定價則疊加毛利、風險溢價與市場供需。兩者應在計費模型中明確分離。</li>
+  </ul>
+
+  <h3 class="subhead"><span class="mk">▸</span>2026 雲端 GPU-hour 市場參考</h3>
+  <div class="tbl">
+  <table class="spec">
+    <caption>租賃行情（隨供需大幅波動，僅供量級參考）</caption>
+    <thead><tr><th>GPU</th><th>On-Demand</th><th>備註</th></tr></thead>
+    <tbody>
+      <tr><td>H100</td><td><span class="num">~$2 / hr</span></td><td>成熟、供給充足</td></tr>
+      <tr><td>B200</td><td><span class="num">~$3–6 / hr</span></td><td>spot ~$2；供給仍吃緊</td></tr>
+      <tr><td>B300</td><td><span class="num">~$8.5 / hr</span></td><td>Blackwell Ultra</td></tr>
+      <tr><td>GB200 NVL72</td><td><span class="num">~$10–27 / GPU-hr</span></td><td>多以整櫃 / Superchip 計價，非單卡</td></tr>
+      <tr><td>Rubin (VR200)</td><td><span class="num">~$6–10+ / hr</span></td><td>預估值，Q4 2026 起上雲</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout k">
+    <p>真正有意義的指標往往不是「每 GPU-hour 多少錢」，而是<strong>每百萬 token 的成本</strong>或<strong>每次有效推論的成本</strong>——新世代硬體靠更高的 FP4 吞吐與 HBM 頻寬，即使每小時更貴，單位 token 成本反而可能更低。設計計費維度時，值得把「資源用量（GPU-hour）」與「產出價值（token / job）」兩種計價基礎都納入考量。</p>
+  </div>
+</div></section>
+
+<!-- ════ A · 縮寫詞彙表 ════ -->
+<section id="sgl"><div class="wrap rev">
+  <div class="label"><span class="n">A</span> 縮寫詞彙表 · Glossary</div>
+  <h2>術語速查</h2>
+  <p class="lede">本手冊出現的主要術語速查。</p>
+  <dl class="gloss">
+    <dt>HBM</dt><dd>High Bandwidth Memory，3D 堆疊、貼在 GPU 旁的高頻寬記憶體。</dd>
+    <dt>TSV</dt><dd>Through-Silicon Via，矽穿孔；HBM 堆疊內的垂直導通。</dd>
+    <dt>CoWoS</dt><dd>TSMC 的 2.5D 先進封裝，整合 GPU die 與 HBM。</dd>
+    <dt>SM</dt><dd>Streaming Multiprocessor，GPU 的基本運算叢集。</dd>
+    <dt>Tensor Core</dt><dd>專做矩陣乘加的單元，AI 算力來源。</dd>
+    <dt>Reticle Limit</dt><dd>單一晶粒的光刻面積上限，驅使走向 chiplet。</dd>
+    <dt>FP4 / FP8</dt><dd>低位元浮點精度；越低吞吐越高、記憶體佔用越小。</dd>
+    <dt>Sparsity</dt><dd>稀疏化（2:1），可讓標稱算力翻倍。</dd>
+    <dt>NVLink</dt><dd>NVIDIA 的 GPU 對 GPU 高速互連（scale-up）。</dd>
+    <dt>NVSwitch</dt><dd>讓多 GPU 全互連（all-to-all）的交換晶片。</dd>
+    <dt>NVLink-C2C</dt><dd>CPU↔GPU 的記憶體一致互連。</dd>
+    <dt>NVLink Domain</dt><dd>能以 NVLink 全互連的最大 GPU 數（world size）。</dd>
+    <dt>UALink</dt><dd>對抗 NVLink 的開放 scale-up 標準（AMD 等）。</dd>
+    <dt>Superchip</dt><dd>CPU + GPU 封裝成單一模組（如 GB200）。</dd>
+    <dt>InfiniBand</dt><dd>低延遲、原生 RDMA 的 scale-out 網路。</dd>
+    <dt>NDR / XDR</dt><dd>InfiniBand 速率世代：400 / 800 Gb/s 每埠。</dd>
+    <dt>SHARP</dt><dd>在交換器內完成集合運算的網內運算技術。</dd>
+    <dt>RoCE</dt><dd>RDMA over Converged Ethernet。</dd>
+    <dt>Spectrum-X</dt><dd>NVIDIA 針對 AI 優化的 Ethernet 平台。</dd>
+    <dt>Ultra Ethernet</dt><dd>UEC 聯盟的 AI-fabric Ethernet 標準。</dd>
+    <dt>DPU</dt><dd>Data Processing Unit，卸載網路/儲存/安全（如 BlueField）。</dd>
+    <dt>DGX / HGX / MGX</dt><dd>整機 / 8-GPU 基板 / 模組化機架參考架構。</dd>
+    <dt>NVL72</dt><dd>72-GPU NVLink domain 的機架級系統。</dd>
+    <dt>Rail-Optimized</dt><dd>把每條 GPU rail 接到不同 leaf 的拓撲。</dd>
+    <dt>Fat-Tree</dt><dd>提供 full bisection bandwidth 的拓撲。</dd>
+    <dt>GPUDirect Storage</dt><dd>資料直接 DMA 進 GPU 記憶體、繞過 CPU。</dd>
+    <dt>DLC</dt><dd>Direct Liquid Cooling，直觸晶片冷板液冷。</dd>
+    <dt>CDU</dt><dd>Coolant Distribution Unit，隔開設施與機架水迴路。</dd>
+    <dt>PUE</dt><dd>Power Usage Effectiveness，設施能效指標。</dd>
+    <dt>800 VDC</dt><dd>設施對機架的高壓直流供電架構。</dd>
+    <dt>TCO</dt><dd>Total Cost of Ownership，總持有成本（CapEx + OpEx）。</dd>
+  </dl>
+</div></section>
+
+<!-- ════ FOOTER ════ -->
+<footer><div class="wrap rev">
+  <div class="big">一座 AI 資料中心，是一台<b>被電力與散熱重新定義的電腦</b>。<small>每一層硬體都在解一個物理問題，而上層的能力，永遠受限於下層。</small></div>
+  <div class="meta">
+    技術筆記 · AIDC 底層硬體架構<br>
+    資料截至 2026 年中 · 規格以原廠揭露為準
+  </div>
+  <p class="disc">本手冊為硬體架構的知識整理，規格數字取自各原廠公開揭露；部分次世代產品（Rubin Ultra、Kyber、Feynman 等）為路線圖預告值，可能隨量產調整。非投資建議。</p>
+</div></footer>
+
+<script>
+/* ── 全站標準 JS（每個 note 檔頁尾都複製這段） ── */
+// nav 捲動加底線
+const navEl=document.getElementById('nav');
+addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>40),{passive:true});
+
+// 進場 reveal
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(!e.isIntersecting)return;
+    e.target.classList.add('in'); io.unobserve(e.target); });
+},{threshold:.12});
+document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+
+// theme toggle（初始主題由 <head> inline script 設定，避免 FOUC）
+const root=document.documentElement;
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+});
+matchMedia('(prefers-color-scheme: light)').addEventListener('change',(e)=>{
+  try{if(localStorage.getItem('theme'))return;}catch(_){}
+  root.setAttribute('data-theme',e.matches?'light':'dark');
+});
+</script>
+</body>
+</html>
